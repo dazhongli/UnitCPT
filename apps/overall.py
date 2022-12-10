@@ -10,6 +10,7 @@ import pandas as pd
 import plotly.express as px
 from dash import dash_table, dcc, html
 from dash.dependencies import Input, Output, State
+from src.cpt import CPT
 
 from app import app
 
@@ -26,7 +27,7 @@ header = dbc.Row(dcc.Markdown(
 data_input_row = dbc.Row(
     [
         dbc.Col(html.Div(
-            id='earthquake-table')),
+            id='data-view')),
         dbc.Col(
             [
                 dbc.Row(
@@ -47,7 +48,7 @@ data_input_row = dbc.Row(
                                 'margin': '10px'
                             },
                             # Allow multiple files to be uploaded
-                            multiple=False
+                            multiple=True
                         ),
                         html.Div(id='Output_data_upload')]),
                 dbc.Row(
@@ -56,14 +57,24 @@ data_input_row = dbc.Row(
                             [i.name for i in Path('./Data').glob('*')], id='file-dropdown'
                         ),
                         dbc.Col([dbc.Button(
-                            'Show Data', id='show-data')]),
+                            'Show Data', id='btn-show-data')]),
                         dbc.Spinner(html.Div(id="loading-output"))]
                 )
-
             ]
         )
     ]
 )
+
+
+# def parse_content(contents, filename, date):
+#     content_type, content_string = contents.split(',')
+
+#     decoded = base64.b64decodeS(content_string)
+#     try:
+#         if 'csv' in filename:
+#             df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+#     except Exception as e:
+
 
 layout = [header, data_input_row]
 
@@ -76,9 +87,9 @@ def update_output(filename):
 
 
 @ app.callback(
-    Output('earthquake-table', 'children'),
+    Output('data-view', 'children'),
     Output('loading-output', 'children'),
-    Input('show-data', 'n_clicks'),
+    Input('btn-show-data', 'n_clicks'),
     State('file-dropdown', 'value'),
     prevent_initial_call=True
 )

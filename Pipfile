@@ -11,6 +11,8 @@ geopandas = "*"
 tqdm = "*"
 matplotlib = "*"
 dash-bootstrap-components = "*"
+pyyaml = "*"
+pypdf2 = "*"
 
 [dev-packages]
 autopep8 = "*"

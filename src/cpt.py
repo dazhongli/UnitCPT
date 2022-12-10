@@ -9,9 +9,10 @@ import pandas as pd
 import plotly.graph_objects as go
 from numpy import degrees, log10, pi, radians, tan
 
-import geoplot as plt
-from ags import AGSParser
-import utilities as utl
+# import src.geoplot as plt
+# import utilities as utl
+# from ags import AGSParser
+# from apps import app
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -111,7 +112,7 @@ class CPT:
             logger.debug('Import CPT Data')
         except Exception as e:
             logger.error(e)
-            raise('Data Not Imported')
+            raise ('Data Not Imported')
         self.df = df
         self.set_data_unit(unit)
         logger.info(
@@ -121,7 +122,7 @@ class CPT:
     def init_CPT(self):
         '''
         '''
-        assert(self.unit_set == True)
+        assert (self.unit_set == True)
         self.df['qt'] = self.df.SCPT_RES + \
             self.df.SCPT_PWP2 * (1-self.net_area_ratio)/1000
         self.df['Rf'] = self.df.SCPT_FRES/self.df.qt/1000*100
@@ -168,10 +169,10 @@ class CPT:
         Param:
         soil_stratum: a data structure contains the information of the soil layering
         '''
-        assert(self.unit_set == True)
+        assert (self.unit_set == True)
         self.soil_stratum = soil_stratum
         if 'SCPT_DPTH' not in self.df.columns:
-            raise('SCPT_DPTH not found, please rename the columns')
+            raise ('SCPT_DPTH not found, please rename the columns')
         self.df['sigma_v_e'] = self.df.SCPT_DPTH.apply(
             self.soil_stratum.effective_stress)
         self.df['u0'] = self.df.SCPT_DPTH.apply(
@@ -684,4 +685,4 @@ class CPT:
         self.calc_CRR75()
         MSF = 174/(M**2.56)  # Magnitude Scaling Factor
         self.df['FoS_Liq'] = self.df.CRR75/self.df.CSR * MSF
-        logger.debug(f'Liquefaction FOS calcualted for PGG={PGA}g and M={M}')
+        logger.debug(f'Liquefaction FOS calculated for PGG={PGA}g and M={M}')

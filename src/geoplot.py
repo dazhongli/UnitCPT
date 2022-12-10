@@ -187,7 +187,7 @@ class GEOPlot():
         if soil_name == 'SILT':
             return 'rgba(61, 58, 79, 0.5)'
         else:
-            raise('Soil Name Not defined')
+            raise ('Soil Name Not defined')
 
     @classmethod
     def marker_list(cls, open_marker=False):

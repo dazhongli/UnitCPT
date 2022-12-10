@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash import dcc, html
 from app import app
-from apps import overall, about
+from apps import overall, about, project
 
 arup_logo = 'logo.png'
 navbar = dbc.Navbar(
@@ -17,12 +17,13 @@ navbar = dbc.Navbar(
                         arup_logo), height='30x')),
                     dbc.Col(dbc.NavbarBrand(
                         'Offshore CPT', className='ml-2')),
-                    dbc.Col(dbc.NavLink("CPT", href='/')),
-                    dbc.Col(dbc.NavLink('Filtering', href='settlement')),
-                    dbc.Col(dbc.NavLink('PWP', href='settlement')),
+                    dbc.Col(dbc.NavLink('Project', href='project')),
+                    dbc.Col(dbc.NavLink("Data", href='/')),
+                    dbc.Col(dbc.NavLink('CPT Interpretation', href='settlement')),
+                    dbc.Col(dbc.NavLink('Pile Design', href='settlement')),
                     # dbc.Col(dbc.NavLink('Progress', href='progress')),
-                    dbc.Col(dbc.NavLink('Excel', href='analysis')),
-                    dbc.Col(dbc.NavLink('Plaxis', href='plaxis')),
+                    dbc.Col(dbc.NavLink('Shallow Foundation', href='analysis')),
+                    dbc.Col(dbc.NavLink('Site Characterization', href='plaxis')),
                     dbc.Col(dbc.NavLink('About',
                                         href='report'), className="width800")
                 ],
@@ -52,8 +53,8 @@ def display_page(pathname):
 #         # importlib.reload(sm)
 #         sm.layout = sm.__layout()  # we force recalculation
 #         return sm.layout
-#     elif pathname == 'surface_movement_marker':
-#         return smm.layout
+    elif pathname == '/project':
+        return project.layout
 #     elif pathname == 'piezometer':
 #         return vwp.layout
 #     elif pathname == 'extensometer':
