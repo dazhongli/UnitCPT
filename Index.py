@@ -14,25 +14,24 @@ navbar = dbc.Navbar(
             dbc.Row(
                 [
                     dbc.Col(html.Img(src=app.get_asset_url(
-                        arup_logo), height='40px')),
-                    # dbc.Col(dbc.NavbarBrand(
-                    #     'Monitoring Data Analyses', className='ml-2')),
-                    dbc.Col(dbc.NavLink("Data", href='/')),
+                        arup_logo), height='30x')),
+                    dbc.Col(dbc.NavbarBrand(
+                        'Offshore CPT', className='ml-2')),
+                    dbc.Col(dbc.NavLink("CPT", href='/')),
                     dbc.Col(dbc.NavLink('Filtering', href='settlement')),
                     dbc.Col(dbc.NavLink('PWP', href='settlement')),
                     # dbc.Col(dbc.NavLink('Progress', href='progress')),
                     dbc.Col(dbc.NavLink('Excel', href='analysis')),
                     dbc.Col(dbc.NavLink('Plaxis', href='plaxis')),
                     dbc.Col(dbc.NavLink('About',
-                                        href='report'), className="width400")
-                ]
+                                        href='report'), className="width800")
+                ],
+                # className="g-0"
             )
         )
     ],
-    sticky="top",
-    color='light',
+    color="dark",
     dark=True,
-    expand=True
 )
 body = dbc.Container([
     html.Div([dcc.Location(id='url', refresh=False)], className='row'),
