@@ -19,19 +19,19 @@ navbar = dbc.Navbar(
                         'Offshore CPT', className='ml-2')),
                     dbc.Col(dbc.NavLink('Project', href='project')),
                     dbc.Col(dbc.NavLink("Data", href='/')),
-                    dbc.Col(dbc.NavLink('CPT Interpretation', href='settlement')),
-                    dbc.Col(dbc.NavLink('Pile Design', href='settlement')),
+                    dbc.Col(dbc.NavLink('CPT', href='settlement')),
+                    dbc.Col(dbc.NavLink('Pile', href='settlement')),
                     # dbc.Col(dbc.NavLink('Progress', href='progress')),
-                    dbc.Col(dbc.NavLink('Shallow Foundation', href='analysis')),
-                    dbc.Col(dbc.NavLink('Site Characterization', href='plaxis')),
+                    dbc.Col(dbc.NavLink('Caissons', href='analysis')),
+                    dbc.Col(dbc.NavLink('Site', href='plaxis')),
                     dbc.Col(dbc.NavLink('About',
                                         href='report'), className="width800")
                 ],
-                # className="g-0"
+                className="g-0"
             )
         )
     ],
-    color="dark",
+    color="light",
     dark=True,
 )
 body = dbc.Container([
@@ -79,4 +79,4 @@ def open_browser():
 if __name__ == '__main__':
 
     # Timer(1, open_browser).start()
-    app.run_server(debug=True, port=port)
+    app.run_server(debug=False, port=port)

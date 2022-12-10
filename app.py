@@ -11,7 +11,7 @@ import src.utilities as ult
 from src.cpt import CPT
 
 app = dash.Dash(__name__, external_stylesheets=[
-                dbc.themes.SLATE])
+                dbc.themes.SPACELAB])
 server = app.server
 app.config.suppress_callback_exceptions = True
 app.title = 'Offshore Cone Penetration Test and Foundation Design'
