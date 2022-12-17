@@ -1,10 +1,14 @@
-from app import app
-import dash_bootstrap_components as dbc
-from dash import html
-import src.dash_utilities as dash_utl
-from pathlib import Path
-from dash import Input, Output, State, dcc
+from fileinput import filename
 import logging
+import re
+import os
+from pathlib import Path
+
+import dash_bootstrap_components as dbc
+from dash import Input, Output, State, dcc, html
+
+import src.dash_utilities as dash_utl
+from app import app
 
 # input_proj_name = dbc.InputGroup(
 #     [dbc.InputGroupText("Project Name"), dbc.Input(
@@ -44,7 +48,8 @@ project_form = html.Div([
                 dbc.InputGroup(
                     [
                         dbc.InputGroupText("Location"),
-                        dbc.Input(placeholder="Amount", type="number"),
+                        dbc.Input(id='input-location',
+                                  placeholder="Amount", type="number"),
                     ],
                     className="mb-3",
                 )
@@ -69,34 +74,49 @@ project_form = html.Div([
 
 
 btn_new_project = dbc.Button('New Project', id='btn-create-proj')
+btn_delete_project = dbc.Button('Delete Project', id='btn-delete-proj')
+btn_open_folder = dbc.Button('Open Folders', id='btn-open-folders')
+
 folders = list(PROJECT_PATH.glob('*'))
-if (len(folders) == 0):
-    projects = html.Div('No Project')
+if len(folders) == 0:
+    radio_options = [{'label': 'No Project', 'value': 'No Project'}]
 else:
-    projects = dbc.Row(
-        [
-            dbc.Label("Existing Projects",
-                      html_for="example-radios-row", width=2),
-            dbc.Col(
-                dbc.RadioItems(
-                    id="radio-proj",
-                    options=[{'label': f.stem, 'value': f.stem}
-                             for f in folders]
-                ),
-                width=10,
+    radio_options = [{'label': f.stem, 'value': f.stem}
+                     for f in folders]
+projects = dbc.Row(
+    [
+        dbc.Label("Existing Projects",
+                  html_for="example-radios-row", width=2),
+        dbc.Col(
+            dbc.RadioItems(
+                id="radio-proj",
+                options=radio_options
             ),
-        ],
-        className="mb-3",
-    )
+            width=10,
+        ),
+    ],
+    className="mb-3",
+)
 layout = html.Div([
     dbc.Row(
         [
             dbc.Col(project_form),
-            dbc.Col(dbc.Form([projects, btn_new_project]))
+            dbc.Col(dbc.Form([projects,
+                             btn_new_project,
+                             btn_delete_project,
+                             btn_open_folder]))
         ]
     ),
     dcc.ConfirmDialog(id='cfm-project-created',
-                      message='Project has been created')
+                      message='Project has been created'),
+    dcc.ConfirmDialog(id='cfm-project-deleted',
+                      message='Project has been deleted'),
+    dbc.Alert(
+        'This is a test',
+        id='alert-auto',
+        is_open=False,
+        duration=4000,
+    ),
 ])
 
 
@@ -108,7 +128,7 @@ layout = html.Div([
     State('input-JN', 'value'),
     Input('btn-create-proj', 'n_clicks'), prevent_initial_call=True
 )
-def display_confirm(name, JN, n_clicks):
+def create_project(name, JN, n_clicks):
     folders = list(PROJECT_PATH.glob('*'))
     options = [{'label': f.stem, 'value': f.stem} for f in folders]
     if n_clicks != 0:
@@ -124,3 +144,54 @@ def display_confirm(name, JN, n_clicks):
             return True, f'{folder_path} Created', [{'label': f.stem, 'value': f.stem} for f in folders]
     else:
         return False, 'this is also a test'
+
+
+@app.callback(
+    Output('cfm-project-deleted', 'displayed'),
+    Output('cfm-project-deleted', 'message'),
+    State('radio-proj', 'value'),
+    Input('btn-delete-proj', 'n_clicks'), prevent_initial_call=True
+)
+def delete_project(project_name, n_clicks):
+    if n_clicks != 0:
+        return True, f'Delete Entire Folder {project_name}?'
+# Update the input form while clicking radio button
+
+
+@app.callback(
+    Output('radio_proj', 'options'),
+    State('radio-proj', 'value'),
+    Input('cfm-project-deleted', 'submit_n_clicks')
+)
+def delete_folder(proj_name, submit_n_clicks):
+    if submit_n_clicks:
+        project_folder = PROJECT_PATH / proj_name
+        project_folder.unlink()
+        folders = list(PROJECT_PATH.glob('*'))
+        logger.info(f'{filename} deleted!')
+        return [{'label': f.stem, 'value': f.stem} for f in folders]
+
+
+@app.callback(
+    Output('alert-auto', 'value'),
+    State('radio-proj', 'value'),
+    Input('btn-open-folders', 'n_clicks')
+)
+def open(folder, n_clicks):
+    if n_clicks:
+        os.startfile(PROJECT_PATH/folder)
+
+
+@app.callback(
+    Output('input-name', 'value'),
+    Output('input-JN', 'value'),
+    Input('radio-proj', 'value'), present_initial_call=True
+)
+def update_input_form(label):
+    if label is not None:
+        JN = label.split('-')[0]
+        name = label.split('-')[1]
+    else:
+        JN = 'None'
+        name = 'None'
+    return name, JN
