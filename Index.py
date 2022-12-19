@@ -1,11 +1,17 @@
+import logging
 import webbrowser
 from threading import Timer
 
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output, State
 from dash import dcc, html
-from app import app
-from apps import overall, about, project
+from dash.dependencies import Input, Output, State
+
+from app import PROJ_DATA, app
+from apps import about, data_process, project
+
+# --------------------Define the logger below -------------------------------------------
+logging.basicConfig(filename='log.log', encoding='utf-8', level=logging.DEBUG)
+# -------------------------------------------------------------------------------------
 
 arup_logo = 'logo.png'
 navbar = dbc.Navbar(
@@ -18,7 +24,7 @@ navbar = dbc.Navbar(
                     dbc.Col(dbc.NavbarBrand(
                         'Offshore CPT', className='ml-2')),
                     dbc.Col(dbc.NavLink('Project', href='project')),
-                    dbc.Col(dbc.NavLink("Data", href='/')),
+                    dbc.Col(dbc.NavLink("Data", href='data_process')),
                     dbc.Col(dbc.NavLink('CPT', href='settlement')),
                     dbc.Col(dbc.NavLink('Pile', href='settlement')),
                     # dbc.Col(dbc.NavLink('Progress', href='progress')),
@@ -46,15 +52,15 @@ app.layout = html.Div([navbar, html.Br(), body])
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/':
-        return overall.layout
+    if pathname == '/data_process':
+        return data_process.layout()
 #         # return
 #     elif pathname == '/settlement':
 #         # importlib.reload(sm)
 #         sm.layout = sm.__layout()  # we force recalculation
 #         return sm.layout
     elif pathname == '/project':
-        return project.layout
+        return project.project_layout(PROJ_DATA)
 #     elif pathname == 'piezometer':
 #         return vwp.layout
 #     elif pathname == 'extensometer':

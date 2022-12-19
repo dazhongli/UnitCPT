@@ -43,7 +43,7 @@ def to_numeric_all(df):
 def read_input_file(filename):
     ''' this function reads a yaml file in and return a dictionary'''
 
-    if filename.endswith('.yaml'):
+    if filename.endswith('.yaml') or filename.endswith('.yml'):
         return _read_yaml_file(filename)
     if filename.endswith('.json'):
         return _read_json_file(filename)

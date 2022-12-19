@@ -1,20 +1,27 @@
-import base64
-import datetime
-import io
-import os
-import subprocess
 from pathlib import Path
+import os
+import base64
+import logging
+
 
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
-from dash import dash_table, dcc, html
+from dash import dcc, html
 from dash.dependencies import Input, Output, State
-from src.cpt import CPT
 
-from app import app
+from app import app, PROJ_DATA, PROJECT_PATH
 
-# Define the layout below
+# Define the logger below
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter(
+    '%(asctime)s -%(pathname)s:%(lineno)d %(levelname)s - %(message)s', '%y-%m-%d %H:%M:%S')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+# -----------------------------------------------------------------------------------------------------
 
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
 
@@ -33,10 +40,10 @@ data_input_row = dbc.Row(
                 dbc.Row(
                     [
                         dcc.Upload(
-                            id='upload_data',
-                            children=html.Div([
-                                html.A('Select Files')
-                            ]),
+                            id='upload-data',
+                            children=html.Div(['Drag and Drop or',
+                                               html.A('Select Files')
+                                               ]),
                             style={
                                 'width': '100%',
                                 'height': '60px',
@@ -65,7 +72,6 @@ data_input_row = dbc.Row(
     ]
 )
 
-
 # def parse_content(contents, filename, date):
 #     content_type, content_string = contents.split(',')
 
@@ -76,13 +82,31 @@ data_input_row = dbc.Row(
 #     except Exception as e:
 
 
-layout = [header, data_input_row]
+def layout():
+    return [header, data_input_row]
+
+# Functions
+
+
+def save_file(UPLOAD_DIRECTORY: Path, name, content):
+    if not UPLOAD_DIRECTORY.exists():
+        UPLOAD_DIRECTORY.mkdir()
+    """Decode and store a file uploaded with Plotly Dash."""
+    data = content.encode("utf8").split(b";base64,")[1]
+    with open(UPLOAD_DIRECTORY / name, "wb") as fp:
+        fp.write(base64.decodebytes(data))
+        logger.debug(f'{name} updated to {UPLOAD_DIRECTORY}')
 
 
 @ app.callback(Output('Output_data_upload', 'children'),
-               Input('upload_data', 'filename')
+               Input('upload-data', 'contents'),
+               State('upload-data', 'filename'),
+               State('upload-data', 'last_modified')
                )
-def update_output(filename):
+def update_output(contents, filenames, last_modified):
+    upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'ags'
+    for filename, content in zip(filenames, contents):
+        save_file(upload_path, filename, content)
     return html.Div(f'{filename}')
 
 

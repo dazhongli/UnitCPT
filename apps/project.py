@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html
 
 import src.dash_utilities as dash_utl
-from app import app
+from app import app, PROJ_DATA, PROJECT_PATH, save_project_data, get_project_data
 
 # input_proj_name = dbc.InputGroup(
 #     [dbc.InputGroupText("Project Name"), dbc.Input(
@@ -26,98 +26,100 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 # Global
-PROJECT_PATH = Path('./projects')  # default path for the project
-
-project_form = html.Div([
-    dbc.InputGroup(
-        [dbc.InputGroupText("Project Name"),
-         dbc.Input(id='input-name',
-                   placeholder="Project Name")],
-        className="mb-3",
-    ),
-    dbc.Row(
-        [
-            dbc.Col([
-                dbc.InputGroup(
-                    [
-                        dbc.InputGroupText('Job Number'),
-                        dbc.Input(id='input-JN', placeholder="Job Number"),
-                    ],
-                    className="mb-5",
-                ),
-                dbc.InputGroup(
-                    [
-                        dbc.InputGroupText("Location"),
-                        dbc.Input(id='input-location',
-                                  placeholder="Amount", type="number"),
-                    ],
-                    className="mb-3",
-                )
-            ])
-        ]
-    ),
-    dbc.InputGroup(
-        [
-            dbc.Select(
-                options=[
-                    {"label": "Option 1", "value": 1},
-                    {"label": "Option 2", "value": 2},
-                ]
-            ),
-            dbc.InputGroupText("With select"),
-        ]
-    ),
-]
-)
-
-# Build the controlling Group
 
 
-btn_new_project = dbc.Button('New Project', id='btn-create-proj')
-btn_delete_project = dbc.Button('Delete Project', id='btn-delete-proj')
-btn_open_folder = dbc.Button('Open Folders', id='btn-open-folders')
-
-folders = list(PROJECT_PATH.glob('*'))
-if len(folders) == 0:
-    radio_options = [{'label': 'No Project', 'value': 'No Project'}]
-else:
-    radio_options = [{'label': f.stem, 'value': f.stem}
-                     for f in folders]
-projects = dbc.Row(
-    [
-        dbc.Label("Existing Projects",
-                  html_for="example-radios-row", width=2),
-        dbc.Col(
-            dbc.RadioItems(
-                id="radio-proj",
-                options=radio_options
-            ),
-            width=10,
+def project_layout(PROJ_DATA):
+    project_form = html.Div([
+        dbc.InputGroup(
+            [dbc.InputGroupText("Project Name"),
+             dbc.Input(id='input-name',
+                       placeholder="Project Name")],
+            className="mb-3",
         ),
-    ],
-    className="mb-3",
-)
-layout = html.Div([
-    dbc.Row(
+        dbc.Row(
+            [
+                dbc.Col([
+                    dbc.InputGroup(
+                        [
+                            dbc.InputGroupText('Job Number'),
+                            dbc.Input(id='input-JN', placeholder="Job Number"),
+                        ],
+                        className="mb-5",
+                    ),
+                    dbc.InputGroup(
+                        [
+                            dbc.InputGroupText("Location"),
+                            dbc.Input(id='input-location',
+                                      placeholder="Amount", type="number"),
+                        ],
+                        className="mb-3",
+                    )
+                ])
+            ]
+        ),
+        dbc.InputGroup(
+            [
+                dbc.Select(
+                    options=[
+                        {"label": "Option 1", "value": 1},
+                        {"label": "Option 2", "value": 2},
+                    ]
+                ),
+                dbc.InputGroupText("With select"),
+            ]
+        ),
+    ]
+    )
+    # Build the controlling Group
+
+    btn_new_project = dbc.Button('New Project', id='btn-create-proj')
+    btn_delete_project = dbc.Button('Delete Project', id='btn-delete-proj')
+    btn_open_folder = dbc.Button('Open Folders', id='btn-open-folders')
+
+    folders = list(PROJECT_PATH.glob('*'))
+    if len(folders) == 0:
+        radio_options = [{'label': 'No Project', 'value': 'No Project'}]
+    else:
+        radio_options = [{'label': f.stem, 'value': f.stem}
+                         for f in folders]
+    PROJ_DATA['projects'] = radio_options
+    projects = dbc.Row(
         [
-            dbc.Col(project_form),
-            dbc.Col(dbc.Form([projects,
-                             btn_new_project,
-                             btn_delete_project,
-                             btn_open_folder]))
-        ]
-    ),
-    dcc.ConfirmDialog(id='cfm-project-created',
-                      message='Project has been created'),
-    dcc.ConfirmDialog(id='cfm-project-deleted',
-                      message='Project has been deleted'),
-    dbc.Alert(
-        'This is a test',
-        id='alert-auto',
-        is_open=False,
-        duration=4000,
-    ),
-])
+            dbc.Label("Existing Projects",
+                      html_for="example-radios-row", width=2),
+            dbc.Col(
+                dbc.RadioItems(
+                    id="radio-proj",
+                    options=radio_options,
+                    value=get_project_data()['active_project']
+                ),
+                width=10,
+            ),
+        ],
+        className="mb-3",
+    )
+    layout = html.Div([
+        dbc.Row(
+            [
+                dbc.Col(project_form),
+                dbc.Col(dbc.Form([projects,
+                                  btn_new_project,
+                                  btn_delete_project,
+                                  btn_open_folder]))
+            ]
+        ),
+        dcc.ConfirmDialog(id='cfm-project-created',
+                          message='Project has been created'),
+        dcc.ConfirmDialog(id='cfm-project-deleted',
+                          message='Project has been deleted'),
+        dbc.Alert(
+            'This is a test',
+            id='alert-auto',
+            is_open=False,
+            duration=4000,
+        ),
+    ])
+    return layout
 
 
 @app.callback(
@@ -191,6 +193,9 @@ def update_input_form(label):
     if label is not None:
         JN = label.split('-')[0]
         name = label.split('-')[1]
+        PROJ_DATA['active_project'] = label
+        save_project_data()
+
     else:
         JN = 'None'
         name = 'None'
