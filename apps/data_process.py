@@ -2,12 +2,13 @@ from pathlib import Path
 import os
 import base64
 import logging
+from src.ags import AGSParser
 
 
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
-from dash import dcc, html
+from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 
 from app import app, PROJ_DATA, PROJECT_PATH
@@ -24,6 +25,8 @@ logger.addHandler(ch)
 # -----------------------------------------------------------------------------------------------------
 
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
+
+__ags_parser__ = AGSParser(ags_format=2)
 
 header = dbc.Row(dcc.Markdown(
     '''
@@ -71,7 +74,32 @@ data_input_row = dbc.Row(
         )
     ]
 )
+layout_data_table = html.Div(
+    dbc.Row(
+        [
+            dbc.Col(dash_table.DataTable(id='table-index'), width=1),
+            dbc.Col(dash_table.DataTable(id='table-content',
+                                         style_table={'height': '500px', 'overflowY': 'auto'}), width=10),
+            dbc.Col(id='data-control', width=1)
+        ]
+    )
+)
 
+
+ags_data_control = html.Div(
+    dbc.Row(
+        [
+            dbc.Button('Download Excel', id='btn-download-excel'),
+            dcc.Download(id='download-dataframe-xlsx')
+        ]
+    )
+)
+
+
+def convert_data_table(df: pd.DataFrame):
+    data = df.to_dict('records')
+    columns = [{'name': i, 'id': i} for i in df.columns]
+    return data, columns
 # def parse_content(contents, filename, date):
 #     content_type, content_string = contents.split(',')
 
@@ -83,7 +111,7 @@ data_input_row = dbc.Row(
 
 
 def layout():
-    return [header, data_input_row]
+    return [data_input_row, header, layout_data_table]
 
 # Functions
 
@@ -99,6 +127,8 @@ def save_file(UPLOAD_DIRECTORY: Path, name, content):
 
 
 @ app.callback(Output('Output_data_upload', 'children'),
+               Output('table-index', 'data'),
+               Output('table-index', 'columns'),
                Input('upload-data', 'contents'),
                State('upload-data', 'filename'),
                State('upload-data', 'last_modified')
@@ -107,32 +137,33 @@ def update_output(contents, filenames, last_modified):
     upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'ags'
     for filename, content in zip(filenames, contents):
         save_file(upload_path, filename, content)
-    return html.Div(f'{filename}')
+        __ags_parser__.read_ags_file(upload_path/filename)
+        df = pd.DataFrame()
+        df['key'] = __ags_parser__.key_IDs
+        data, columns = convert_data_table(df)
+    return html.Div(f'{filename}'), data, columns
 
 
-@ app.callback(
-    Output('data-view', 'children'),
-    Output('loading-output', 'children'),
-    Input('btn-show-data', 'n_clicks'),
-    State('file-dropdown', 'value'),
+@app.callback(
+    Output('table-content', 'data'),
+    Output('table-content', 'columns'),
+    Output('data-control', 'children'),
+    Input('table-index', 'active_cell'), prevent_initial_call=True
+)
+def show_content(active_cell):
+    key = __ags_parser__.key_IDs[active_cell['row']]
+    df = __ags_parser__.get_df_from_key(key)
+    df_no_na = df.mask(df == '').dropna(thresh=3, axis=1)
+    data, columns = convert_data_table(df_no_na)
+    return data, columns, ags_data_control
+    # get the key selected
+
+
+@app.callback(
+    Output('download-dataframe-xlsx', 'data'),
+    Input("btn-download-excel", 'n_clicks'),
     prevent_initial_call=True
 )
-def show_table(n_clicks, filename):
-    if n_clicks is not None:
-        file_full_path = Path.cwd() / f'./Data/{filename}'
-        print(file_full_path)
-        # os.startfile(file_full_path)
-        df = pd.read_csv(file_full_path)
-        fig = px.scatter_mapbox(df, lat="LAT", lon="LON",
-                                height=800, width=1200, color='MAG_FINAL', zoom=3)
-
-        description = dcc.Markdown(f'''
-
-        _Loaded file {filename}_
-
-        |Item|Data|
-        |:-----------|:----------|
-        |rows        |{df.shape[0]:,.0f}|
-        |cols        |{df.shape[1]}|
-        ''')
-        return [dcc.Graph(figure=fig), description]
+def download_excel(n_clicks):
+    return dcc.send_data_frame(__ags_parser__.active_df.to_excel, f'{__ags_parser__.active_key}.xlsx',
+                               sheet_name=f'{__ags_parser__.active_key}')

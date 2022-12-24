@@ -4,12 +4,20 @@ import csv
 
 
 class AGSParser:
-    def __init__(self, ags_str, ags_format=1):
+    def __init__(self, ags_format=1):
+        '''
+        @param:
+        ags_format: define the format of the ags file
+        '''
+        self.ags_format = ags_format
+
+    def read_ags_file(self, filename):
+        with open(filename, 'r') as fin:
+            ags_str = fin.read()
+        # Get the keys within the ags file
         self.ags_str = ags_str
-        # self.keys = AGSKeys(re.findall(r"\*\*\??(\w+)", ags_str))
         self.keys = AGSKeys(re.findall('"GROUP","(\w+)"', ags_str))
         self.key_IDs = re.findall('"GROUP","(\w+)"', ags_str)
-        self.ags_format = ags_format
         if self.ags_format == 1:
             self._search_key = r'"\*{2}\??key"(.*)\n([\s\S]*?)(?:\n{2,}|\Z)'
         else:
@@ -24,7 +32,7 @@ class AGSParser:
 
     def extract_str_block(self, key=''):
         '''
-        Return the string blocks given a key
+        Return the string blocks given a kepy
         '''
         search_key = self._search_key.replace('key', key)
         if self.ags_format == 1:
@@ -36,11 +44,12 @@ class AGSParser:
 
     def get_df_from_key(self, key='', hole_id=''):
         s = self.extract_str_block(key)
-        df = self._parse_data_to_df(s)
+        self.active_df = self._parse_data_to_df(s)
+        self.active_key = key
         if hole_id is not '':
-            return df[df['HOLE_ID'] == hole_id]
+            return self.active_df[self.active_df['HOLE_ID'] == hole_id]
         else:
-            return df
+            return self.active_df
 
     def _parse_data_to_df(self, s):
         lines = s.split('\n')

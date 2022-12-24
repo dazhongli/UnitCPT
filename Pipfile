@@ -13,6 +13,7 @@ matplotlib = "*"
 dash-bootstrap-components = "*"
 pyyaml = "*"
 pypdf2 = "*"
+openpyxl = "*"
 
 [dev-packages]
 autopep8 = "*"
