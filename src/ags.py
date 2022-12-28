@@ -1,10 +1,30 @@
 import pandas as pd
 import re
 import csv
+from enum import Enum
+
+
+class AGSFormat(Enum):
+    '''
+    Define the format of AGS
+    '''
+    AGS3 = 1
+    AGS4 = 2
+
+
+def is_float(element: any) -> bool:
+    # If you expect None to be passed:
+    if element is None:
+        return False
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
 
 
 class AGSParser:
-    def __init__(self, ags_format=1):
+    def __init__(self, ags_format=AGSFormat.AGS4):
         '''
         @param:
         ags_format: define the format of the ags file
@@ -18,7 +38,7 @@ class AGSParser:
         self.ags_str = ags_str
         self.keys = AGSKeys(re.findall('"GROUP","(\w+)"', ags_str))
         self.key_IDs = re.findall('"GROUP","(\w+)"', ags_str)
-        if self.ags_format == 1:
+        if self.ags_format == AGSFormat.AGS3:
             self._search_key = r'"\*{2}\??key"(.*)\n([\s\S]*?)(?:\n{2,}|\Z)'
         else:
             self._search_key = r'"GROUP","key"\n([\s\S]*?)(?:\n{2,}|\Z)'
@@ -52,6 +72,11 @@ class AGSParser:
             return self.active_df
 
     def _parse_data_to_df(self, s):
+        '''
+        parses the string to dataframe
+
+        @Param: `s`  input string
+        '''
         lines = s.split('\n')
         data = []
         for j in range(len(lines)):
@@ -64,7 +89,9 @@ class AGSParser:
                 for i in range(1, len(line_info)):
                     data[-1][i] = data[-1][i] + line_info[i]
                 continue
-            data.append(re.findall('"(.*?)"', line))
+            search_data = [float(x) if is_float(
+                x) else x for x in re.findall('"(.*?)"', line)]
+            data.append(search_data)
         column = [x.replace('*', '') for x in data[0]]
         df = pd.DataFrame(data[1:])
         df.columns = column

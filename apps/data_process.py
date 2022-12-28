@@ -22,12 +22,25 @@ formatter = logging.Formatter(
     '%(asctime)s -%(pathname)s:%(lineno)d %(levelname)s - %(message)s', '%y-%m-%d %H:%M:%S')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
-# -----------------------------------------------------------------------------------------------------
-
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
-
 __ags_parser__ = AGSParser(ags_format=2)
 
+
+# ========================================[Global Funcs]========================================
+def __save_file__(UPLOAD_DIRECTORY: Path, name, content):
+    '''
+    Save the files
+    '''
+    if not UPLOAD_DIRECTORY.exists():
+        UPLOAD_DIRECTORY.mkdir()
+    """Decode and store a file uploaded with Plotly Dash."""
+    data = content.encode("utf8").split(b";base64,")[1]
+    with open(UPLOAD_DIRECTORY / name, "wb") as fp:
+        fp.write(base64.decodebytes(data))
+        logger.debug(f'{name} updated to {UPLOAD_DIRECTORY}')
+
+
+# ========================================Components========================================
 header = dbc.Row(dcc.Markdown(
     '''
     Data Processing of the Earthquake records
@@ -90,7 +103,9 @@ ags_data_control = html.Div(
     dbc.Row(
         [
             dbc.Button('Download Excel', id='btn-download-excel'),
-            dcc.Download(id='download-dataframe-xlsx')
+            dbc.Button('Download Json', id='btn-download-json'),
+            dcc.Download(id='download-dataframe-excel'),
+            dcc.Download(id='download-dataframe-json'),
         ]
     )
 )
@@ -100,6 +115,8 @@ def convert_data_table(df: pd.DataFrame):
     data = df.to_dict('records')
     columns = [{'name': i, 'id': i} for i in df.columns]
     return data, columns
+
+
 # def parse_content(contents, filename, date):
 #     content_type, content_string = contents.split(',')
 
@@ -110,22 +127,13 @@ def convert_data_table(df: pd.DataFrame):
 #     except Exception as e:
 
 
+# ========================================Layout========================================
 def layout():
     return [data_input_row, header, layout_data_table]
 
-# Functions
 
-
-def save_file(UPLOAD_DIRECTORY: Path, name, content):
-    if not UPLOAD_DIRECTORY.exists():
-        UPLOAD_DIRECTORY.mkdir()
-    """Decode and store a file uploaded with Plotly Dash."""
-    data = content.encode("utf8").split(b";base64,")[1]
-    with open(UPLOAD_DIRECTORY / name, "wb") as fp:
-        fp.write(base64.decodebytes(data))
-        logger.debug(f'{name} updated to {UPLOAD_DIRECTORY}')
-
-
+# ========================================Callbacks========================================
+# ---------------------------------------[Save Data]-------------------------------------------------
 @ app.callback(Output('Output_data_upload', 'children'),
                Output('table-index', 'data'),
                Output('table-index', 'columns'),
@@ -133,10 +141,18 @@ def save_file(UPLOAD_DIRECTORY: Path, name, content):
                State('upload-data', 'filename'),
                State('upload-data', 'last_modified')
                )
-def update_output(contents, filenames, last_modified):
+def update_output(contents, filenames: list[Path], last_modified):
     upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'ags'
     for filename, content in zip(filenames, contents):
-        save_file(upload_path, filename, content)
+        if filename.endswith('ags'):
+            upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'ags'
+        elif filename.endswith('asc'):
+            upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'ASCII'
+        else:
+            upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'TXT'
+            logger.warning(
+                f'{filename} extension not konwn, saved at TXT folder')
+        __save_file__(upload_path, filename, content)
         __ags_parser__.read_ags_file(upload_path/filename)
         df = pd.DataFrame()
         df['key'] = __ags_parser__.key_IDs
@@ -144,6 +160,7 @@ def update_output(contents, filenames, last_modified):
     return html.Div(f'{filename}'), data, columns
 
 
+# ---------------------------------------[AGS Key Callback]-------------------------------------------------
 @app.callback(
     Output('table-content', 'data'),
     Output('table-content', 'columns'),
@@ -159,11 +176,22 @@ def show_content(active_cell):
     # get the key selected
 
 
+# ---------------------------------------[Download Excel]-------------------------------------------------
 @app.callback(
-    Output('download-dataframe-xlsx', 'data'),
+    Output('download-dataframe-excel', 'data'),
     Input("btn-download-excel", 'n_clicks'),
     prevent_initial_call=True
 )
 def download_excel(n_clicks):
     return dcc.send_data_frame(__ags_parser__.active_df.to_excel, f'{__ags_parser__.active_key}.xlsx',
                                sheet_name=f'{__ags_parser__.active_key}')
+
+
+# ---------------------------------------[Download JSON]-------------------------------------------------
+@app.callback(
+    Output('download-dataframe-json', 'data'),
+    Input("btn-download-json", 'n_clicks'),
+    prevent_initial_call=True
+)
+def download_excel(n_clicks):
+    return dcc.send_data_frame(__ags_parser__.active_df.to_json, f'{__ags_parser__.active_key}.json')
