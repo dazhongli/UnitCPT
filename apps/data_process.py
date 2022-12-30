@@ -23,6 +23,9 @@ formatter = logging.Formatter(
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
+
+
+# ========================================[Global Variables]========================================
 __ags_parser__ = AGSParser(ags_format=2)
 
 
@@ -115,16 +118,6 @@ def convert_data_table(df: pd.DataFrame):
     data = df.to_dict('records')
     columns = [{'name': i, 'id': i} for i in df.columns]
     return data, columns
-
-
-# def parse_content(contents, filename, date):
-#     content_type, content_string = contents.split(',')
-
-#     decoded = base64.b64decodeS(content_string)
-#     try:
-#         if 'csv' in filename:
-#             df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
-#     except Exception as e:
 
 
 # ========================================Layout========================================

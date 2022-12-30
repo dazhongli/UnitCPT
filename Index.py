@@ -7,7 +7,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output, State
 
 from app import PROJ_DATA, app
-from apps import about, data_process, project
+from apps import about, data_process, project, cpt_process
 
 # --------------------Define the logger below -------------------------------------------
 logging.basicConfig(filename='log.log', encoding='utf-8', level=logging.DEBUG)
@@ -25,7 +25,7 @@ navbar = dbc.Navbar(
                         'Offshore CPT', className='ml-2')),
                     dbc.Col(dbc.NavLink('Project', href='project')),
                     dbc.Col(dbc.NavLink("Data", href='data_process')),
-                    dbc.Col(dbc.NavLink('CPT', href='settlement')),
+                    dbc.Col(dbc.NavLink('CPT', href='CPT')),
                     dbc.Col(dbc.NavLink('Pile', href='settlement')),
                     # dbc.Col(dbc.NavLink('Progress', href='progress')),
                     dbc.Col(dbc.NavLink('Caissons', href='analysis')),
@@ -61,8 +61,8 @@ def display_page(pathname):
 #         return sm.layout
     elif pathname == '/project':
         return project.project_layout(PROJ_DATA)
-#     elif pathname == 'piezometer':
-#         return vwp.layout
+    elif pathname == '/CPT':
+        return cpt_process.layout()
 #     elif pathname == 'extensometer':
 #         return extensometer.layout
 #     elif pathname == '/progress':
@@ -85,4 +85,4 @@ def open_browser():
 if __name__ == '__main__':
 
     # Timer(1, open_browser).start()
-    app.run_server(debug=False, port=port)
+    app.run_server(debug=True, port=port)
