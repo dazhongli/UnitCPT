@@ -124,3 +124,14 @@ def plot_showgrid(fig, naxis=1):
             fig.layout[f'xaxis{i}'].showgrid = True
             fig.layout[f'yaxis{i}'].showgrid = True
     return fig
+
+
+def convert_to_geojson(cls, gdf, filename, suffix='_wgs84', init_epsg='epsg:2326'):
+    '''saves two copies of geojson file, one with the original coordinates system
+    the otherone is the WGS84 format'''
+    assert ('.json' in filename)
+    gdf.crs = {'init': init_epsg}
+    gdf.to_file(filename, driver='GeoJSON')
+    gdf_wgs84 = gdf.to_crs(epsg=4326)
+    gdf_wgs84.to_file(filename.split(
+        '..json')[0] + '_wgs84' + '.json', driver='GeoJSON')
