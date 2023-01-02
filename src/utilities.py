@@ -3,6 +3,7 @@ import logging
 import re
 from itertools import cycle
 
+from src.geoplot import GEOPlot
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -35,7 +36,7 @@ def to_numeric_all(df):
         try:
             df[col] = pd.to_numeric(df[col])
         except:
-            #logger.debug(f'{col} coversion failed')
+            # logger.debug(f'{col} coversion failed')
             pass
     return df
 
@@ -51,7 +52,7 @@ def read_input_file(filename):
 
 def interp_row(df, val, by_col, method='ffill', sort='ascending'):
     '''
-    This function inserts a row with value of 'val', at the column 'by_col', other values in the dataframe will be initiated as 
+    This function inserts a row with value of 'val', at the column 'by_col', other values in the dataframe will be initiated as
     np.nan and then interpolated or filled
     '''
     # check if the value has already in the dataframe
@@ -135,3 +136,80 @@ def convert_to_geojson(cls, gdf, filename, suffix='_wgs84', init_epsg='epsg:2326
     gdf_wgs84 = gdf.to_crs(epsg=4326)
     gdf_wgs84.to_file(filename.split(
         '..json')[0] + '_wgs84' + '.json', driver='GeoJSON')
+
+# ---------------------------------------[plot] ----------------------------------------------
+
+
+def plot_point_mapbox(gdf, x, y, text, fig=None, **argv):
+    '''
+    Plots the scatter plot on a mapbox
+    @Param:
+    gdf: GeoDataFrame
+    '''
+    lat = gdf.geometry.y
+    lon = gdf.geometry.x
+    hoverinfo = gdf[text]
+    if fig is None:
+        fig = GEOPlot.get_figure()
+    fig.add_trace(go.Scattermapbox(
+                  lat=lat,
+                  lon=lon,
+                  mode='markers',
+                  text=hoverinfo.values,
+                  textposition="bottom right",
+                  hoverinfo='text',
+                  name=instrument_type,
+                  marker=dict(
+                      size=5,
+                      opacity=1,
+                      **argv,
+                  )
+                  )
+                  )
+    fig.update_layout(
+        hovermode='closest',
+        showlegend=True,
+        mapbox=go.layout.Mapbox(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            style='satellite',
+            center=go.layout.mapbox.Center(
+                lat=22.277470,
+                lon=114.062579
+            ),
+            pitch=0,
+        ))
+
+
+def plot_polygon_mapbox(gdf):
+    fig = go.Figure()
+    for ix, row in gdf.iterrows():
+        x = list(row.geometry.exterior.xy[0])
+        y = list(row.geometry.exterior.xy[1])
+        fig.add_trace(go.Scattermapbox(
+            lat=y,
+            lon=x,
+            mode='lines',
+            hoverinfo='none',
+            showlegend=False,
+            marker=go.scattermapbox.Marker(color='grey',
+                                           size=0.01
+                                           ),
+            text=['Hong Kong'],
+        ))
+    fig.update_layout(
+        hovermode='closest',
+        showlegend=True,
+        margin=dict(l=0, r=0, t=0, b=0),
+        mapbox=go.layout.Mapbox(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            center=go.layout.mapbox.Center(
+                lat=22.277470,
+                lon=114.062579
+            ),
+            pitch=0,
+            zoom=14
+        )
+    )
+    return fig

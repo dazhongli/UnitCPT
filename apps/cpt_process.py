@@ -39,6 +39,32 @@ CONTENT_STYLE = {
 
 # ========================================[Components]========================================
 
+modal_excel = dbc.Modal(
+    [
+        dbc.ModalHeader(dbc.ModalTitle('Excel')),
+        dbc.ModalBody(
+            dbc.Form(
+                dbc.Row(
+                    [
+                        dbc.Label('Select x value', width='auto'),
+                        dcc.Dropdown(
+                            options=[1, 2, 3],
+                            id='dropdown-excel-x'
+                        ),
+                        dbc.Label('Select y value', width='auto'),
+                        dcc.Dropdown(
+                            options=[1, 2, 3],
+                            id='dropdown-excel-y'
+                        ),
+                        dbc.Button('Submit', id='btn-modal-submit-excel')
+                    ]
+                )
+            )
+        )
+    ],
+    id='modal-excel',
+    is_open=False
+)
 
 # -----------------------------------------[CPT Control]---------------------------------------------
 cpt_control = dbc.Card(
@@ -68,6 +94,13 @@ cpt_control = dbc.Card(
                 dbc.Col(dbc.Label('Show Layout'), width=5),
                 dbc.Col(dbc.Button('Layout', id='btn-show-layout'), width=6)
             ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(dbc.Label('upload Excel'), width=5),
+                dbc.Col(dbc.Button('Upload', id='btn-upload-excel')),
+                modal_excel
+            ]
         )
     ],
     # style=SIDEBAR_STYLE
@@ -79,7 +112,7 @@ content_DIV = dbc.Card(
         dbc.Row(
             html.H5('Location Plan')
         ),
-        dcc.Graph(id='graph-location-plan'),
+        dcc.Graph(id='graph-location-plan', figure=[]),
     ],
     # style=CONTENT_STYLE
 )
@@ -108,3 +141,14 @@ def show_CPT_location(n_clicks):
                             height=500, width=900, zoom=11)
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
     return fig
+
+
+@app.callback(
+    Output('modal-excel', 'is_open'),
+    Input('btn-upload-excel', 'n_clicks'),
+    Input('btn-modal-submit-excel', 'n_clicks'),
+    State('modal-excel', 'is_open')
+)
+def toggle_modal(open_modal_click, submit_click, is_open):
+    if open_modal_click or submit_click:
+        return not is_open
