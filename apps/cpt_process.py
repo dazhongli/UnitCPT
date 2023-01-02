@@ -41,9 +41,8 @@ CONTENT_STYLE = {
 
 
 # -----------------------------------------[CPT Control]---------------------------------------------
-cpt_control = html.Div(
+cpt_control = dbc.Card(
     [
-        dbc.Row(html.H4('CPT Process')),
         dbc.Row(html.H5('Input')),
         dbc.Row(                                        # Area Radio
             [
@@ -71,24 +70,28 @@ cpt_control = html.Div(
             ]
         )
     ],
-    style=SIDEBAR_STYLE
+    # style=SIDEBAR_STYLE
 )
 
 # -----------------------------------------[CPT-Output]-------------------------------------
-content_DIV = html.Div(
+content_DIV = dbc.Card(
     [
         dbc.Row(
             html.H5('Location Plan')
         ),
         dcc.Graph(id='graph-location-plan'),
     ],
-    style=CONTENT_STYLE
+    # style=CONTENT_STYLE
 )
 # ========================================[Layout]========================================
 
 
 def layout():
-    layout = html.Div([cpt_control, content_DIV])
+    layout = dbc.Row(
+        [
+            dbc.Col(cpt_control, width=3),
+            dbc.Col(content_DIV, width=8)
+        ], justify='around')
     return layout
 
 
@@ -102,6 +105,6 @@ def show_CPT_location(n_clicks):
     assert (filename.exists())
     gdf = gpd.read_file(filename)
     fig = px.scatter_mapbox(gdf, lat='Lon', lon='Lat',
-                            height=500, width=1000, zoom=11)
+                            height=500, width=900, zoom=11)
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
     return fig
