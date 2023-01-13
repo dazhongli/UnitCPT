@@ -75,7 +75,7 @@ def display_page(pathname):
         return about.layout
 
 
-port = 5000
+port = 8085
 
 
 def open_browser():
@@ -85,4 +85,5 @@ def open_browser():
 if __name__ == '__main__':
 
     # Timer(1, open_browser).start()
-    app.run_server(debug=False, port=port)
+    # local host, Dazhong's IP = 10.208.179.45
+    app.run_server(debug=False,host="0.0.0.0", port=port)

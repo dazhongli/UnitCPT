@@ -133,3 +133,5 @@ dmypy.json
 /projects
 *.ipynb
 *.lnk
+*.asc
+*.ags
