@@ -2,7 +2,7 @@ import numpy as np
 from numpy.core.fromnumeric import cumsum
 import pandas as pd
 from scipy.interpolate import interp1d
-import utilities as utl
+# import utilities as utl
 
 
 class Stratum:

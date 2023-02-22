@@ -33,6 +33,12 @@ class GEOPlot():
                               xaxis=dict(showgrid=True),
                               yaxis=dict(showgrid=True),
                               )
+        if size == 'A4' and orientation == 'h':
+            fig.update_layout(width=800, height=566, template='simple_white',
+                              margin=dict(l=100, r=20, t=60, b=150),
+                              xaxis=dict(showgrid=True),
+                              yaxis=dict(showgrid=True),
+                              )
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
                               plot_bgcolor='rgba(0,0,0,0)')

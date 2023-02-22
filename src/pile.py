@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from numpy import pi
 from numpy import degrees, radians, tan
-from soil import Stratum
-import utilities as ult
+from src.soil import Stratum
+import src.utilities as ult
 from numpy import vectorize
 from copy import copy
 
@@ -228,7 +228,7 @@ class PileDriving:
         qc - cone resistance at the tip in MPa
         sigma_v - effective vertical stress in kPa
         '''
-        assert(self.pile is not None)
+        assert (self.pile is not None)
         Ab = self.pile.annulus_area
         if drainage == 'UD':
             return 0.6*qc*1000 * Ab

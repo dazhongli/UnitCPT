@@ -131,7 +131,6 @@ dmypy.json
 # all projects files
 
 /projects
-*.ipynb
 *.lnk
 *.asc
 *.ags

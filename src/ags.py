@@ -1,44 +1,16 @@
 import pandas as pd
 import re
 import csv
-from enum import Enum
-
-
-class AGSFormat(Enum):
-    '''
-    Define the format of AGS
-    '''
-    AGS3 = 1
-    AGS4 = 2
-
-
-def is_float(element: any) -> bool:
-    # If you expect None to be passed:
-    if element is None:
-        return False
-    try:
-        float(element)
-        return True
-    except ValueError:
-        return False
 
 
 class AGSParser:
-    def __init__(self, ags_format=AGSFormat.AGS4):
-        '''
-        @param:
-        ags_format: define the format of the ags file
-        '''
-        self.ags_format = ags_format
-
-    def read_ags_file(self, filename):
-        with open(filename, 'r') as fin:
-            ags_str = fin.read()
-        # Get the keys within the ags file
+    def __init__(self, ags_str, ags_format=1):
         self.ags_str = ags_str
+        # self.keys = AGSKeys(re.findall(r"\*\*\??(\w+)", ags_str))
         self.keys = AGSKeys(re.findall('"GROUP","(\w+)"', ags_str))
         self.key_IDs = re.findall('"GROUP","(\w+)"', ags_str)
-        if self.ags_format == AGSFormat.AGS3:
+        self.ags_format = ags_format
+        if self.ags_format == 1:
             self._search_key = r'"\*{2}\??key"(.*)\n([\s\S]*?)(?:\n{2,}|\Z)'
         else:
             self._search_key = r'"GROUP","key"\n([\s\S]*?)(?:\n{2,}|\Z)'
@@ -52,7 +24,7 @@ class AGSParser:
 
     def extract_str_block(self, key=''):
         '''
-        Return the string blocks given a kepy
+        Return the string blocks given a key
         '''
         search_key = self._search_key.replace('key', key)
         if self.ags_format == 1:
@@ -64,19 +36,13 @@ class AGSParser:
 
     def get_df_from_key(self, key='', hole_id=''):
         s = self.extract_str_block(key)
-        self.active_df = self._parse_data_to_df(s)
-        self.active_key = key
+        df = self._parse_data_to_df(s)
         if hole_id is not '':
-            return self.active_df[self.active_df['HOLE_ID'] == hole_id]
+            return df[df['HOLE_ID'] == hole_id]
         else:
-            return self.active_df
+            return df
 
     def _parse_data_to_df(self, s):
-        '''
-        parses the string to dataframe
-
-        @Param: `s`  input string
-        '''
         lines = s.split('\n')
         data = []
         for j in range(len(lines)):
@@ -89,9 +55,7 @@ class AGSParser:
                 for i in range(1, len(line_info)):
                     data[-1][i] = data[-1][i] + line_info[i]
                 continue
-            search_data = [float(x) if is_float(
-                x) else x for x in re.findall('"(.*?)"', line)]
-            data.append(search_data)
+            data.append(re.findall('"(.*?)"', line))
         column = [x.replace('*', '') for x in data[0]]
         df = pd.DataFrame(data[1:])
         df.columns = column

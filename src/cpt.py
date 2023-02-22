@@ -9,10 +9,9 @@ import pandas as pd
 import plotly.graph_objects as go
 from numpy import degrees, log10, pi, radians, tan
 
-# import src.geoplot as plt
-# import utilities as utl
-# from ags import AGSParser
-# from apps import app
+import src.geoplot as plt
+from src.ags import AGSParser
+import src.utilities as utl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -22,7 +21,6 @@ formatter = logging.Formatter(
     '%(asctime)s -%(pathname)s:%(lineno)d %(levelname)s - %(message)s', '%y-%m-%d %H:%M:%S')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
-
 PA = 101.325
 
 
@@ -72,7 +70,7 @@ class CPT:
         if filename != '':
             self.df = self.read_data(filename, key, pattern)
         self.soil_stratum = None
-        # Ranges 0.70 ~ 0.85 (page 22 of CPT Guide 2015 Roberston)
+        # Ranges 0.70 ~ 0.85 (page 22 of CPT Guide 2015 Robertson)
         self.net_area_ratio = net_area_ratio
         self.unit_set = False  # Need to set the unit before process
 
@@ -288,7 +286,7 @@ class CPT:
                 self.df.SCPT_RES = self.df.SCPT_RES/1000
             if unit[1] == 'MPa':
                 self.df.SCPT_FRES = self.df.SCPT_FRES*1000
-            if unit[0] == 'MPa':
+            if unit[2] == 'MPa':
                 self.df.SCPT_PWP2 = self.df.SCPT_PWP2*1000
             self.unit_set = True
         self.max_depth = np.ceil((self.df['SCPT_DPTH'].max())/5+1)*5
@@ -296,7 +294,7 @@ class CPT:
 
     def update_data_column_name(self, columns=[]):
         '''
-        The name of columns shoudl be 
+        The name of columns should be 
         SCPT_DPTH - Depth of Cone
         SCPT_FRES - Shaft Resistance
         SCPT_RES - Cone Resistance
@@ -322,10 +320,10 @@ class CPT:
     @classmethod
     def add_SBT_axes(cls, fig, depth_range, row=1, col=1):
         '''
-        Add the labele and ticks for soil classification for plotting Ic
+        Add the label and ticks for soil classification for plotting Ic
         fig - A plotly figure
         depth_range: range of the depth to be plotted, e.g., [50,0]
-        row, col = row and col for multiplot
+        row, col = row and col for multi plots
         '''
         fig.update_yaxes(range=depth_range, row=row, col=col)
         tickvals = [0, 1.3, 2.05, 2.6, 2.95, 3.6, 4]
@@ -347,9 +345,9 @@ class CPT:
         # fig.add_trace(go.Scatter(x=[0.65], y=[np.array(depth_range).mean()],mode='text',text='Sands-clean sand to Silt Sand',
         #  orientation ='v'))
         levels = [0.65, 1.875, 2.525, 2.975, 3.475, 4]
-        lables = ['Gravelly sand to dense sand', 'Sands - clean sand to silty sand', 'Sand mixtures - silty sand to sandy silt',
+        labels = ['Gravelly sand to dense sand', 'Sands - clean sand to silty sand', 'Sand mixtures - silty sand to sandy silt',
                   'Silt mixture - Clayey silt to silty clay', 'Clays - silty clay to clay', 'Organic Soils - clay']
-        for level, text in zip(levels, lables):
+        for level, text in zip(levels, labels):
             fig.add_annotation(go.layout.Annotation(x=level-0.2, y=np.array(
                 depth_range).mean(), text=text, textangle=-90, font=dict(color='rgba(0,0,0,0.8)')), row=row, col=col)
 
@@ -363,7 +361,7 @@ class CPT:
         if 'SCPG_TESN' in df.columns:
             df_group = df.groupby('SCPG_TESN')
         else:
-            df_group = (name, df)
+            df_group = zip(name, df)
         for name, group in df_group:
             fig.add_trace(go.Scatter(y=group.SCPT_DPTH, x=group.SCPT_RES,
                                      showlegend=False, name=name, line=dict(color='black')), 1, 1)

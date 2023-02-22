@@ -31,14 +31,15 @@ navbar = dbc.Navbar(
                     dbc.Col(dbc.NavLink('Caissons', href='analysis')),
                     dbc.Col(dbc.NavLink('Site', href='plaxis')),
                     dbc.Col(dbc.NavLink('About',
-                                        href='report'), className="width800")
+                                        href='report'))
                 ],
-                className="g-0"
+                justify='around'
             )
         )
     ],
     color="light",
     dark=True,
+    expand='lg'
 )
 body = dbc.Container([
     html.Div([dcc.Location(id='url', refresh=False)], className='row'),

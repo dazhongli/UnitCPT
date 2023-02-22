@@ -1,18 +1,22 @@
 import dash_bootstrap_components as dbc
+import geopandas as gpd
 import pandas as pd
 import plotly.express as px
 from dash import dash_table, dcc, html
 from dash.dependencies import Input, Output, State
 
 from app import PROJ_DATA, PROJECT_PATH, app
+from src import DashPlot
 from src.cpt import CPT
-import geopandas as gpd
+from src import plt
 
 # ========================================[Global Variables]========================================
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
 cpt_driver = CPT(net_area_ratio=0.85)
 # cpt_driver.read_ASCII()
 __project_name__ = PROJ_DATA['active_project']
+
+__dash_plotter__ = DashPlot(PROJ_DATA)
 
 SIDEBAR_STYLE = {
     "position": "fixed",
@@ -134,11 +138,19 @@ def layout():
     Input('btn-show-layout', 'n_clicks')
 )
 def show_CPT_location(n_clicks):
-    filename = PROJECT_PATH / __project_name__ / 'data' / 'shp' / 'CPT_coords.json'
+    '''
+    Shows the location of CPTs, when user click the show layout button, this will gives a location plan
+    '''
+    project_name = PROJ_DATA['active_project']
+    filename = PROJECT_PATH / project_name / 'data' / 'shp' / 'CPT_coords.json'
     assert (filename.exists())
     gdf = gpd.read_file(filename)
-    fig = px.scatter_mapbox(gdf, lat='Lon', lon='Lat',
-                            height=500, width=900, zoom=11)
+    fig = plt.GEOPlot.get_figure(orientation='h')
+    # fig = __dash_plotter__.plot_scatter(gdf)
+    fig = __dash_plotter__.plot_point_mapbox(
+        gdf=gdf, hoverinfo='CPT', fig=fig, instrument_type='CPT', mode='markers+text')
+    # fig = px.scatter_mapbox(gdf, lat='Lon', lon='Lat',
+    #                         height=500, width=900, zoom=11)
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
     return fig
 

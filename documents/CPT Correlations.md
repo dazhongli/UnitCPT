@@ -1,5 +1,6 @@
 # CPT Correlation
 
+This document presents the correlation implemented in the current code.
 ## Basic Engineering Properties
 
 ### Unit Weight
@@ -10,7 +11,7 @@ $$ \gamma/\gamma_w = 0.27[\log(R_f)] + 0.36 [\log(q_t/p_a)] + 1.236$$ 1
 
 - $\gamma$ = unit weight of soil
 - $\gamma_w$ = unit weight of water
-- $R_f$ = friction ratio
+- $R_f$ = friction ratio, the ratio of $f_s$ over $q_t$, i.e, $\frac{f_s}{q_t} \times \text{100\%}$
 - $q_t$ = corrected cone resistance
 - $P_a$ = atmospheric pressure
 
