@@ -22,6 +22,7 @@ formatter = logging.Formatter(
     '%(asctime)s -%(pathname)s:%(lineno)d %(levelname)s - %(message)s', '%y-%m-%d %H:%M:%S')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+
 PA = 101.325
 
 

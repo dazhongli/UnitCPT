@@ -86,4 +86,4 @@ if __name__ == '__main__':
 
     # Timer(1, open_browser).start()
     # local host, Dazhong's IP = 10.208.179.45
-    app.run_server(debug=False,host="0.0.0.0", port=port)
+    app.run_server(debug=False, host="localhost", port=port)
