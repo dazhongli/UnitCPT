@@ -8,6 +8,9 @@ import yaml
 from plotly.subplots import make_subplots
 from shapely.geometry import Polygon
 import pandas as pd
+import numpy as np
+from scipy import interpolate
+import geopandas as gpd
 
 
 class DashPlot():
@@ -353,7 +356,7 @@ class DashPlot():
             dates : Pandas Series of Dates
             data  : Pandas Series of Data
             interval: interval of interpolation, by default 1 unit
-            freq: Frequence for interpolation, by default a week
+            freq: Frequency for interpolation, by default a week
 
         '''
         if offset_date < dates.min():
@@ -527,7 +530,7 @@ class DashPlot():
     @classmethod
     def calculate_contour_points(cls, gdf, z, nx=100, ny=100, method='linear',
                                  extrapolate=True):
-        # convert them to complex numbder
+        # convert them to complex number
         nx = complex(0, nx)
         ny = complex(0, ny)
         x_min, x_max = gdf.geometry.x.values.min(), gdf.geometry.x.values.max()

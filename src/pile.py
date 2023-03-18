@@ -168,10 +168,10 @@ class PileCapacityCPT():
         fs = c1 * Ar**b * c2 * tan(delta)**d * c3
         return fs
 
-    def pile_compression_capacity(selfmethod='UWA'):
+    def pile_compression_capacity(self, method='UWA'):
         if self.pile is None or self.cpt_data is None:
             raise Exception(
-                'Either Pile information or CPT data not initlised ')
+                'Either Pile information or CPT data not ')
 
 
 class PileDriving:

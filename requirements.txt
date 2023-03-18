@@ -1,0 +1,26 @@
+beautifulsoup4==4.11.2
+Brotli @ file:///D:/bld/brotli-split_1648883782420/work
+certifi==2022.12.7
+click==7.1.2
+clr-loader==0.1.7
+dash @ file:///home/conda/feedstock_root/build_artifacts/dash_1675174399548/work
+dash-bootstrap-components @ file:///home/conda/feedstock_root/build_artifacts/dash-bootstrap-components_1679106361958/work
+dash-core-components==2.0.0
+dash-html-components==2.0.0
+dash-table==5.0.0
+Flask==1.1.2
+Flask-Compress @ file:///home/conda/feedstock_root/build_artifacts/flask-compress_1663772969809/work
+itsdangerous==2.1.2
+Jinja2 @ file:///home/conda/feedstock_root/build_artifacts/jinja2_1655912915439/work
+jupyter_client==7.4.9
+jupyter_core==4.12.0
+MarkupSafe @ file:///D:/bld/markupsafe_1654706097181/work
+nbclient==0.7.2
+nbconvert==7.2.10
+nest-asyncio==1.5.6
+plotly @ file:///home/conda/feedstock_root/build_artifacts/plotly_1677271849976/work
+soupsieve==2.4
+tenacity @ file:///home/conda/feedstock_root/build_artifacts/tenacity_1677600641219/work
+tinycss2==1.2.1
+Werkzeug @ file:///home/conda/feedstock_root/build_artifacts/werkzeug_1651670883478/work
+wincertstore==0.2

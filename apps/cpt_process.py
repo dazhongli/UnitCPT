@@ -120,6 +120,15 @@ content_DIV = dbc.Card(
     ],
     # style=CONTENT_STYLE
 )
+cpt_plot = dbc.Card(
+    [
+        dbc.Row(
+            html.H5('CPT Plot')
+        ),
+        dcc.Graph(id='fig-cpt-plot', figure=[]),
+    ],
+    # style=CONTENT_STYLE
+)
 # ========================================[Layout]========================================
 
 
@@ -127,13 +136,16 @@ def layout():
     layout = dbc.Row(
         [
             dbc.Col(cpt_control, width=3),
-            dbc.Col(content_DIV, width=8)
+            dbc.Col([
+                dbc.Row([content_DIV]),
+                dbc.Row([cpt_plot])
+            ])
         ], justify='around')
     return layout
 
 
 # ========================================[Callbacks]========================================
-@app.callback(
+@ app.callback(
     Output('graph-location-plan', 'figure'),
     Input('btn-show-layout', 'n_clicks')
 )
@@ -155,7 +167,7 @@ def show_CPT_location(n_clicks):
     return fig
 
 
-@app.callback(
+@ app.callback(
     Output('modal-excel', 'is_open'),
     Input('btn-upload-excel', 'n_clicks'),
     Input('btn-modal-submit-excel', 'n_clicks'),
@@ -164,3 +176,20 @@ def show_CPT_location(n_clicks):
 def toggle_modal(open_modal_click, submit_click, is_open):
     if open_modal_click or submit_click:
         return not is_open
+
+
+@ app.callback(
+    Output('fig-cpt-plot', 'figure'),
+    Input('graph-location-plan', 'clickData'), prevent_initial_callbacks=True
+)
+def show_CPT(clickData):
+    '''
+    Select the file based on click
+    '''
+    try:
+        SI_name = clickData['points'][0]['text']
+        # print(SI_name)
+        file_path = 
+    except Exception as e:
+        print(e)
+    return None

@@ -1,10 +1,18 @@
-# Offshore-CPT
-CPT correlation and Foundation Design 
+# UnitCPT
+
+CPT correlation and Foundation Design
+
+## Installation
+
+ ```shell
+ conda create -n unitcpt python=3.9
+ conda activate unitcpt
+
+ ```
 
 ## Create and delete projects
 
 This function is added to enable create and delete project easily with an interface
-
 
 ## How to communicate between different pages
 

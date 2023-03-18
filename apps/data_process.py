@@ -144,7 +144,7 @@ def update_output(contents, filenames: list[Path], last_modified):
         else:
             upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'TXT'
             logger.warning(
-                f'{filename} extension not konwn, saved at TXT folder')
+                f'{filename} extension not known, saved at TXT folder')
         __save_file__(upload_path, filename, content)
         __ags_parser__.read_ags_file(upload_path/filename)
         df = pd.DataFrame()
