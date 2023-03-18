@@ -1,6 +1,8 @@
 # UnitCPT
 
-CPT correlation and Foundation Design
+UnitCPT is a Python package built on top of the `Plotly Dash` framework, designed to provide functionality for processing CPT data for geological interpretation and offshore foundation design.
+
+
 
 ## Installation
 
@@ -16,4 +18,4 @@ This function is added to enable create and delete project easily with an interf
 
 ## How to communicate between different pages
 
-1. designed a data structure in `app.py`, when calling the layout, this needs to be function, such that it will get updated when switching back to the original page
+1. designed a data structure in `app.py`, when calling the layout, this needs to be function, such that it will get updated when switching back to the original page.

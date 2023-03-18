@@ -1,16 +1,22 @@
-import pandas as pd
-import re
 import csv
+import re
+from enum import Enum
+import pandas as pd
+
+
+class AGSFormat(Enum):
+    AGS4 = 1
+    AGS3 = 2
 
 
 class AGSParser:
-    def __init__(self, ags_str, ags_format=1):
+    def __init__(self, ags_str, ags_format=AGSFormat.AGS3):
         self.ags_str = ags_str
         # self.keys = AGSKeys(re.findall(r"\*\*\??(\w+)", ags_str))
         self.keys = AGSKeys(re.findall('"GROUP","(\w+)"', ags_str))
         self.key_IDs = re.findall('"GROUP","(\w+)"', ags_str)
         self.ags_format = ags_format
-        if self.ags_format == 1:
+        if self.ags_format == AGSFormat.AGS3:
             self._search_key = r'"\*{2}\??key"(.*)\n([\s\S]*?)(?:\n{2,}|\Z)'
         else:
             self._search_key = r'"GROUP","key"\n([\s\S]*?)(?:\n{2,}|\Z)'
@@ -27,17 +33,16 @@ class AGSParser:
         Return the string blocks given a key
         '''
         search_key = self._search_key.replace('key', key)
-        if self.ags_format == 1:
+        if self.ags_format == AGSFormat.AGS3:
             block = re.findall(search_key, self.ags_str)[0][1]
         else:
             block = re.findall(search_key, self.ags_str)[0]
-
         return block
 
     def get_df_from_key(self, key='', hole_id=''):
         s = self.extract_str_block(key)
         df = self._parse_data_to_df(s)
-        if hole_id is not '':
+        if hole_id != '':
             return df[df['HOLE_ID'] == hole_id]
         else:
             return df

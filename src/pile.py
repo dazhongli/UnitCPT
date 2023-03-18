@@ -199,11 +199,11 @@ class PileDriving:
     def init_friction(self, cone_friction, kh, sigma_v, phi, drainage='Dr'):
         '''
         Return the initial shaft friction based on ALM's method
-        this will included both internal and externall
+        this will included both internal and externally
         kh : horizontal soil pressure coefficient
         sigma_v: effective vertical stress
         cone-friction : Cone friction measured from the CPT tests
-        drainage: 'Dr' or 'UD' for the drained or undrained case, respecrtivley:
+        drainage: 'Dr' or 'UD' for the drained or undrained case, respectively:
         '''
         if drainage == 'UD':
             return cone_friction

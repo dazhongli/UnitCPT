@@ -1,17 +1,18 @@
 import json
 import logging
 import re
+from datetime import datetime
 from itertools import cycle
+from pathlib import Path
 
-from src.geoplot import GEOPlot
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import yaml
-from datetime import datetime
-from pathlib import Path
 from PyPDF2 import PdfMerger
+
+from src.geoplot import GEOPlot
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

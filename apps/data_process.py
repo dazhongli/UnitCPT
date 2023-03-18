@@ -132,7 +132,8 @@ def layout():
                Output('table-index', 'columns'),
                Input('upload-data', 'contents'),
                State('upload-data', 'filename'),
-               State('upload-data', 'last_modified')
+               State('upload-data', 'last_modified'),
+               prevent_initial_callbacks=True
                )
 def update_output(contents, filenames: list[Path], last_modified):
     upload_path = PROJECT_PATH / PROJ_DATA['active_project'] / 'ags'

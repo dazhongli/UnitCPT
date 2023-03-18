@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import dash_bootstrap_components as dbc
 import geopandas as gpd
 import pandas as pd
@@ -6,9 +9,8 @@ from dash import dash_table, dcc, html
 from dash.dependencies import Input, Output, State
 
 from app import PROJ_DATA, PROJECT_PATH, app
-from src import DashPlot
+from src import DashPlot, plt
 from src.cpt import CPT
-from src import plt
 
 # ========================================[Global Variables]========================================
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
@@ -83,7 +85,10 @@ cpt_control = dbc.Card(
         dbc.Row(                                        # Area Radio
             [
                 dbc.Col(dbc.Label('Read ASCII'), width=5),
-                dbc.Col(dbc.Input('input-area-ratio', value=0.85), width=6)
+                dbc.Col(dcc.Dropdown(id='dropdown-ASCII',
+                                     options=[{'label': 'No file selected',
+                                               'value': 'No file selected'}],
+                                     value='No file selected'), width=6)
             ]
         ),
         dbc.Row(
@@ -116,7 +121,7 @@ content_DIV = dbc.Card(
         dbc.Row(
             html.H5('Location Plan')
         ),
-        dcc.Graph(id='graph-location-plan', figure=[]),
+        dcc.Graph(id='graph-location-plan', figure={}),
     ],
     # style=CONTENT_STYLE
 )
@@ -125,7 +130,7 @@ cpt_plot = dbc.Card(
         dbc.Row(
             html.H5('CPT Plot')
         ),
-        dcc.Graph(id='fig-cpt-plot', figure=[]),
+        dcc.Graph(id='fig-cpt-plot', figure={}),
     ],
     # style=CONTENT_STYLE
 )
@@ -135,7 +140,7 @@ cpt_plot = dbc.Card(
 def layout():
     layout = dbc.Row(
         [
-            dbc.Col(cpt_control, width=3),
+            dbc.Col(cpt_control),
             dbc.Col([
                 dbc.Row([content_DIV]),
                 dbc.Row([cpt_plot])
@@ -143,8 +148,9 @@ def layout():
         ], justify='around')
     return layout
 
-
 # ========================================[Callbacks]========================================
+
+
 @ app.callback(
     Output('graph-location-plan', 'figure'),
     Input('btn-show-layout', 'n_clicks')
@@ -178,18 +184,30 @@ def toggle_modal(open_modal_click, submit_click, is_open):
         return not is_open
 
 
-@ app.callback(
-    Output('fig-cpt-plot', 'figure'),
-    Input('graph-location-plan', 'clickData'), prevent_initial_callbacks=True
+@app.callback(
+    [Output('fig-cpt-plot', 'figure'),
+     Output('dropdown-ASCII', 'options'),
+     Output('dropdown-ASCII', 'value')],
+    [Input('graph-location-plan', 'clickData')],
+    prevent_initial_callbacks=True
 )
 def show_CPT(clickData):
-    '''
-    Select the file based on click
-    '''
     try:
-        SI_name = clickData['points'][0]['text']
-        # print(SI_name)
-        file_path = 
+        if clickData is None or 'points' not in clickData:
+            return [{}, {}, '']
+
+        point = clickData['points'][0]
+        SI_name = point['text']
+
+        project_name = PROJ_DATA['active_project']
+        ascii_dir = Path(os.path.join('.', 'projects', project_name, 'ASCII'))
+        file_pattern = f'*{SI_name}*'
+        files = list(ascii_dir.glob(file_pattern))
+        if len(files) == 0:
+            return [None, None, f'No files found for {SI_name}.']
+        options = [{"label": x.stem, "value": x.stem} for x in files]
+
+        return [{}, options, files[0].stem]
+
     except Exception as e:
-        print(e)
-    return None
+        return [{}, {}, f'Error: {e}']

@@ -96,7 +96,7 @@ class CPT:
     def read_ags(self, filename, unit=['MPa', 'MPa', 'MPa'], ags_format=2):
         '''
         Call the AGSParse module to read the ags data in. 
-        Delete the firt two rows of the data, which are supposed to include the unit 
+        Delete the first two rows of the data, which are supposed to include the unit 
         '''
 
         with open(filename) as fin:
