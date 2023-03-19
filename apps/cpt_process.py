@@ -91,6 +91,15 @@ cpt_control = dbc.Card(
                                      value='No file selected'), width=6)
             ]
         ),
+        dbc.Row(                                        # JSON
+            [
+                dbc.Col(dbc.Label('Read JSON'), width=5),
+                dbc.Col(dcc.Dropdown(id='dropdown-JSON',
+                                     options=[{'label': 'No file selected',
+                                               'value': 'No file selected'}],
+                                     value='No file selected'), width=6)
+            ]
+        ),
         dbc.Row(
             [
                 dbc.Col(dbc.Label('CPT Process'), width=5),

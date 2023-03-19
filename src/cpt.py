@@ -9,9 +9,9 @@ import pandas as pd
 import plotly.graph_objects as go
 from numpy import degrees, log10, pi, radians, tan
 
-import src.geoplot as plt
-from src.ags import AGSParser
-import src.utilities as utl
+from .geoplot import GEOPlot
+from .ags import AGSParser
+from .utilities import to_numeric_all, plot_showgrid
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -66,6 +66,24 @@ def extract_data_from(filename, row_number, pattern='ags'):
 
 
 class CPT:
+    name_map = {
+        'SCPT_DPTH': 'Depth (m)',
+        'SCPT_RES': 'qc (MPa)',
+        'SCPT_FRES': 'fs (kPa)',
+        'SCPT_PWP2': 'u (kPa)',
+        'u0': 'u0 (kPa)',
+        'Fr': 'Fr (%)',
+        'SPT': 'SPT N60 (blows/30cm)',
+        'M': 'Constrained Mod. (MPa)',
+        'Dr': 'Dr (%)',
+        'phi': 'Friction angle (°)',
+        'G0': 'Go (MPa)',
+        'qt': 'qt (MPa)',
+        'gamma': 'γ (kN/m³)',
+        'Ic': 'Ic'
+    }
+    name_map_reverse = {v: k for k, v in name_map.items()}
+
     def __init__(self, filename='', key='Data table', pattern='ags', net_area_ratio=0.85):
         if filename != '':
             self.df = self.read_data(filename, key, pattern)
@@ -106,7 +124,7 @@ class CPT:
             df = ags_parser.get_df_from_key(ags_parser.keys.SCPT)
             # drop the first two lines that contains unit
             df = df.drop([0, 1], axis=0)
-            df = utl.to_numeric_all(df)
+            df = to_numeric_all(df)
             df = df.dropna(how='all', axis=1)
             logger.debug('Import CPT Data')
         except Exception as e:
@@ -190,12 +208,12 @@ class CPT:
         Plot the soil behaviour Type by Robertson 1990 and  updated in 2010, refer to page 27 of CPT Guide 2015
         '''
         df = self.df
-        fig = plt.GEOPlot.get_figure(rows=1, cols=1)
+        fig = GEOPlot.get_figure(rows=1, cols=1)
         depth_range = [self.max_depth, 0]
         fig.update_yaxes(range=depth_range)
         tickvals = [0, 1.3, 2.05, 2.6, 2.95, 3.6]
         fig.update_xaxes(tickvals=tickvals)
-        color = plt.GEOPlot.get_color()
+        color = GEOPlot.get_color()
         for tick in tickvals[:]:
             fig.add_trace(go.Scatter(x=[tick, tick], y=depth_range, showlegend=False,
                                      fill='tonexty'))
@@ -215,9 +233,24 @@ class CPT:
         return fig
 
     def plot_SBTn_full(self, plotname=''):
+        '''
+        Plot the SBTn of the data within df
+        required column names of the dataframe will be 
+        ['SCPT_DPTH','SCPT_PWP2','Fr',]
+        '''
         df = self.df
-        fig = plt.GEOPlot.get_figure(rows=1, cols=4)
-        max_depth = self.max_depth
+        if 'SCPT_DPTH' not in self.df.columns:
+            columns = self.df.columns
+            updated_columns = [CPT.name_map_reverse[x]
+                               if x in CPT.name_map_reverse.keys() else x for x in columns]
+            df.columns = updated_columns
+
+        fig = GEOPlot.get_figure(rows=1, cols=4)
+        if hasattr(CPT, 'max_depth'):
+            max_depth = self.max_depth
+        else:
+            self.max_depth = self.df.SCPT_DPTH.max()
+            max_depth = self.max_depth
         fig.update_yaxes(range=[max_depth, 0], dtick=2)
         fig.update_layout(height=800, width=1200)
         x_labels = ['qt (MPa)', 'Frictional Ratio (%)',
@@ -247,7 +280,7 @@ class CPT:
     def plot_su(self, plotname='', nkt=12):
         '''
         '''
-        fig = plt.GEOPlot.get_figure(rows=1, cols=4)
+        fig = GEOPlot.get_figure(rows=1, cols=4)
         df = self.df
         max_depth = self.max_depth
         fig.update_yaxes(range=[max_depth, 0], dtick=2)
@@ -328,7 +361,6 @@ class CPT:
         fig.update_yaxes(range=depth_range, row=row, col=col)
         tickvals = [0, 1.3, 2.05, 2.6, 2.95, 3.6, 4]
         fig.update_xaxes(tickvals=tickvals, row=row, col=col)
-        # color = plt.GEOPlot.get_color()
         color = cycle([
             'rgba(63, 123, 26, 0.3)',  # Not used
             'rgba(59, 225, 93, 0.5)',  # Gravel
@@ -357,7 +389,7 @@ class CPT:
         '''
         df = self.df
         if fig is None:
-            fig = plt.GEOPlot.get_figure(rows=1, cols=3, **kwargs)
+            fig = GEOPlot.get_figure(rows=1, cols=3, **kwargs)
         if 'SCPG_TESN' in df.columns:
             df_group = df.groupby('SCPG_TESN')
         else:
@@ -386,12 +418,12 @@ class CPT:
                 df.SCPT_DPTH >= water_level, 10*(df.SCPT_DPTH-water_level), 0)
             fig.add_trace(go.Scatter(
                 x=hydrostatic, y=df.SCPT_DPTH, name='Hydrostatic'), 1, 3)
-        fig = utl.plot_showgrid(fig, 3)
+        fig = plot_showgrid(fig, 3)
         return fig
 
     def get_Dr_plot(self, plotname='', method='Jamiolkowski'):
         self.calc_relative_density(method=method)
-        fig = plt.GEOPlot.get_figure()
+        fig = GEOPlot.get_figure()
         tickvals = [0, 15, 30, 56, 80, 100]
         for tick in tickvals[:]:
             fig.add_trace(go.Scatter(x=[tick, tick], y=[0, self.max_depth], showlegend=False,
@@ -594,7 +626,7 @@ class CPT:
     @classmethod
     def plot_qc(cls, df, qc='qc (MPa)', depth='Depth (m)', Ic='Ic', fig=None, row=1, col=1):
         if fig is None:
-            fig = plt.GEOPlot.get_figure()
+            fig = GEOPlot.get_figure()
         fig.add_trace(go.Scatter(x=np.where(df[Ic] < 0.65, df[qc], 0), y=df[depth], mode='none',
                                  fill='tozerox', fillcolor='rgba(59, 225, 93, 1.0)',
                                  name='Gravelly sand to dense sand'), row=row, col=col)
@@ -685,3 +717,14 @@ class CPT:
         MSF = 174/(M**2.56)  # Magnitude Scaling Factor
         self.df['FoS_Liq'] = self.df.CRR75/self.df.CSR * MSF
         logger.debug(f'Liquefaction FOS calculated for PGG={PGA}g and M={M}')
+
+    def __str__(self):
+        if self.df is None:
+            return 'No Data is associated with object'
+        else:
+            print_str = f'''
+            alpha = {self.net_area_ratio}
+            no. Data = {self.df.shape[0]}
+            current_columns = {self.df.columns}
+            '''
+            return print_str
