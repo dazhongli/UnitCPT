@@ -9,9 +9,9 @@ from dash import dash_table, dcc, html
 from dash.dependencies import Input, Output, State
 
 from app import PROJ_DATA, PROJECT_PATH, app
-from src import DashPlot, plt
-from src.cpt import CPT
-
+from UnitCPT.src.cpt import CPT
+from UnitCPT.src.dash_plot import DashPlot
+import UnitCPT.src.geoplot as plt
 # ========================================[Global Variables]========================================
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
 cpt_driver = CPT(net_area_ratio=0.85)

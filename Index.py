@@ -1,13 +1,14 @@
+from apps import about, cpt_process, data_process, project
+from app import PROJ_DATA, app
+from dash.dependencies import Input, Output, State
+from dash import dcc, html
+import dash_bootstrap_components as dbc
 import logging
+import os
+import sys
 import webbrowser
 from threading import Timer
 
-import dash_bootstrap_components as dbc
-from dash import dcc, html
-from dash.dependencies import Input, Output, State
-
-from app import PROJ_DATA, app
-from apps import about, data_process, project, cpt_process
 
 # --------------------Define the logger below -------------------------------------------
 logging.basicConfig(filename='log.log', encoding='utf-8', level=logging.DEBUG)

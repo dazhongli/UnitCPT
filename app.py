@@ -1,18 +1,24 @@
-from dash.dependencies import Input, Output, State
-from dash import dash_table, dcc, html
-import yaml
-import plotly.express as px
-import pandas as pd
-import dash_bootstrap_components as dbc
-import src
-import dash
-from pathlib import Path
+import os
 import sys
+from pathlib import Path
 
+import dash
+import dash_bootstrap_components as dbc
+import pandas as pd
+import plotly.express as px
+import yaml
+from dash import dash_table, dcc, html
+from dash.dependencies import Input, Output, State
+
+import src
 import src.geoplot as plt
 import src.utilities as ult
 from src.ags import AGSParser
 from src.cpt import CPT
+
+current_path = os.path.abspath(__file__)
+# add package to path
+sys.path.append(os.path.dirname(os.path.dirname(current_path)))
 
 app = dash.Dash(__name__, external_stylesheets=[
                 dbc.themes.SPACELAB])
