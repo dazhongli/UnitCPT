@@ -149,7 +149,7 @@ cpt_plot = dbc.Card(
 def layout():
     layout = dbc.Row(
         [
-            dbc.Col(cpt_control),
+            dbc.Col(cpt_control, width=2),
             dbc.Col([
                 dbc.Row([content_DIV]),
                 dbc.Row([cpt_plot])
@@ -178,7 +178,7 @@ def show_CPT_location(n_clicks):
         gdf=gdf, hoverinfo='CPT', fig=fig, instrument_type='CPT', mode='markers+text')
     # fig = px.scatter_mapbox(gdf, lat='Lon', lon='Lat',
     #                         height=500, width=900, zoom=11)
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+    fig.update_layout(width=1200, margin=dict(l=0, r=0, t=0, b=0))
     return fig
 
 
@@ -210,13 +210,18 @@ def show_CPT(clickData):
 
         project_name = PROJ_DATA['active_project']
         ascii_dir = Path(os.path.join('.', 'projects', project_name, 'ASCII'))
+        CPT_dir = Path(os.path.join('.', 'projects', project_name, 'CPT'))
         file_pattern = f'*{SI_name}*'
-        files = list(ascii_dir.glob(file_pattern))
-        if len(files) == 0:
+        files_ASCII = list(ascii_dir.glob(file_pattern))
+        files_CPT = list(CPT_dir.glob(file_pattern))
+        if len(files_CPT) == 0:
             return [None, None, f'No files found for {SI_name}.']
-        options = [{"label": x.stem, "value": x.stem} for x in files]
-
-        return [{}, options, files[0].stem]
+        options = [{"label": x.stem, "value": x.stem} for x in files_ASCII]
+        df = pd.read_json(files_CPT[0])
+        cpt_plot = CPT()
+        cpt_plot.df = df
+        fig = cpt_plot.plot_SBTn_full(SI_name)
+        return [fig, options, files_ASCII[0].stem]
 
     except Exception as e:
         return [{}, {}, f'Error: {e}']
