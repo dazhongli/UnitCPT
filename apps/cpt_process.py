@@ -149,11 +149,11 @@ cpt_plot = dbc.Card(
 def layout():
     layout = dbc.Row(
         [
-            dbc.Col(cpt_control, width=2),
+            dbc.Col(cpt_control, width=4),
             dbc.Col([
                 dbc.Row([content_DIV]),
                 dbc.Row([cpt_plot])
-            ])
+            ],width=8)
         ], justify='around')
     return layout
 

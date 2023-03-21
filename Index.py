@@ -1,4 +1,4 @@
-from apps import about, cpt_process, data_process, project
+from apps import about, cpt_process, data_process, project, pile_process
 from app import PROJ_DATA, app
 from dash.dependencies import Input, Output, State
 from dash import dcc, html
@@ -27,9 +27,9 @@ navbar = dbc.Navbar(
                     dbc.Col(dbc.NavLink('Project', href='project')),
                     dbc.Col(dbc.NavLink("Data", href='data_process')),
                     dbc.Col(dbc.NavLink('CPT', href='CPT')),
-                    dbc.Col(dbc.NavLink('Pile', href='settlement')),
+                    dbc.Col(dbc.NavLink('Pile', href='pile')),
                     # dbc.Col(dbc.NavLink('Progress', href='progress')),
-                    dbc.Col(dbc.NavLink('Caissons', href='analysis')),
+                    dbc.Col(dbc.NavLink('Caissons', href='caisson')),
                     dbc.Col(dbc.NavLink('Site', href='plaxis')),
                     dbc.Col(dbc.NavLink('About',
                                         href='report'))
@@ -67,6 +67,8 @@ def display_page(pathname):
         return project.project_layout(PROJ_DATA)
     elif pathname == '/CPT':
         return cpt_process.layout()
+    elif pathname == '/pile':
+        return pile_process.layout()
 #     elif pathname == 'extensometer':
 #         return extensometer.layout
 #     elif pathname == '/progress':
