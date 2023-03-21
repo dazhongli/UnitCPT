@@ -130,7 +130,4 @@ dmypy.json
 
 # all projects files
 
-/projects
 *.lnk
-*.asc
-*.ags
