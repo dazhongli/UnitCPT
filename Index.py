@@ -40,8 +40,10 @@ navbar = dbc.Navbar(
     ],
     color="light",
     dark=True,
-    expand='lg'
+    expand='lg',
+    style={'padding-right': '40px', 'padding-left': '40px'}
 )
+
 body = dbc.Container([
     html.Div([dcc.Location(id='url', refresh=False)], className='row'),
     html.Div(id='page-content'),
