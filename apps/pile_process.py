@@ -1,6 +1,10 @@
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_bootstrap_components as dbc
+import base64
+import io
+
+import matplotlib.pyplot as plt
+
+from UnitCPT import (Input, Output, Path, PipePile, app, dash_table, dbc, dcc,
+                     html, pd, px)
 
 pile_dim_card = dbc.Card(
     [
@@ -10,27 +14,36 @@ pile_dim_card = dbc.Card(
                 dbc.Row(
                     [
                         dbc.Col(html.Label("Pile Diameter (m)",
-                                style={"font-size": "14pt"}), width=6),
+                                style={"font-size": "12pt"}), width=6),
                         dbc.Col(dcc.Input(id="input-diameter",
-                                type="number", value=0), width=6),
+                                type="number", value=3.5), width=6),
                     ],
                     align="center",
                 ),
                 dbc.Row(
                     [
                         dbc.Col(html.Label("Pile Thickness (mm)",
-                                style={"font-size": "14pt"}), width=6),
+                                style={"font-size": "12pt"}), width=6),
                         dbc.Col(dcc.Input(id="input-thickness",
-                                type="number", value=0), width=6),
+                                type="number", value=50), width=6),
                     ],
                     align="center",
                 ),
                 dbc.Row(
                     [
                         dbc.Col(html.Label("Pile Embedment (m)",
-                                style={"font-size": "14pt"}), width=6),
+                                style={"font-size": "12pt"}), width=6),
                         dbc.Col(dcc.Input(id="input-embedment",
-                                type="number", value=0), width=6),
+                                type="number", value=60), width=6),
+                    ],
+                    align="center",
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(html.Label("Pile Length (m)",
+                                style={"font-size": "12pt"}), width=6),
+                        dbc.Col(dcc.Input(id="input-length",
+                                type="number", value=70), width=6),
                     ],
                     align="center",
                 ),
@@ -93,7 +106,7 @@ pile_soil_card = dbc.Card(
                 dbc.Row(
                     [
                         dbc.Col(html.Label("Method", style={
-                                "font-size": "14pt"}), width=3),
+                                "font-size": "12pt"}), width=3),
                         dbc.Col(
                             dcc.Dropdown(
                                 id="input-method",
@@ -111,7 +124,7 @@ pile_soil_card = dbc.Card(
                 dbc.Row(
                     [
                         dbc.Col(html.Label("Interval of plotting",
-                                style={"font-size": "14pt"}), width=3),
+                                style={"font-size": "12pt"}), width=3),
                         dbc.Col(
                             dcc.Slider(
                                 id="input-plot-interval",
@@ -140,7 +153,7 @@ pile_resp_card = dbc.Card(
                 dbc.Row(
                     [
                         dbc.Col(html.Label("Solver", style={
-                                "font-size": "14pt"}), width=3),
+                                "font-size": "12pt"}), width=3),
                         dbc.Col(
                             dcc.Dropdown(
                                 id="input-solver",
@@ -169,7 +182,7 @@ pile_resp_card = dbc.Card(
 )
 sidebar = html.Div(
     [
-        html.H2("Pile Input"),
+        html.H4("Input"),
         html.Label("Geological condition"),
         dcc.Dropdown(
             options=[
@@ -190,7 +203,8 @@ sidebar = html.Div(
 
 graphs = html.Div(
     [
-        html.H2("Output"),
+        html.H4("Output"),
+        html.Div(id='fig-pile-shape'),
         dcc.Graph(id="figure-CPT-location"),
         dcc.Graph(id="figure-pile-response"),
     ],
@@ -206,3 +220,47 @@ def layout():
             dbc.Col(graphs, width=8)
         ], justify='left')
     return layout
+
+
+def resize_figure(fig, width_px, height_px, dpi):
+    # Set the figure size in inches based on the desired pixel size and DPI
+    width_in = width_px / dpi
+    height_in = height_px / dpi
+    fig.set_size_inches(width_in, height_in)
+
+# ---------------------------------------[Callback]-------------------------------------------------
+# callback for pile dimension
+
+
+@app.callback(
+    Output('fig-pile-shape', 'children'),
+    [Input('input-diameter', 'value'),
+     Input('input-thickness', 'value'),
+     Input('input-length', 'value'),
+     Input('input-embedment', 'value')
+     ]
+)
+def update_pile_geometry(diameter, thickness, length, penetration):
+    pile = PipePile(dia=diameter, thickness=thickness/1000,
+                    penetration=penetration, length=length)
+    fig, ax = pile.plot()
+    resize_figure(fig, 1500, 5000, 600)
+
+    # Serialize the plot to a base64-encoded string
+    buf = io.BytesIO()
+    fig.savefig(buf, format='svg')
+    buf.seek(0)
+    fig.tight_layout()
+    fig.patch.set_edgecolor('blue')
+    fig.patch.set_linewidth('2')
+    b64 = base64.b64encode(buf.read()).decode('utf-8')
+
+    # Return the serialized plot as an image component
+    return html.Div(
+        html.ObjectEl(
+            data='data:image/svg+xml;base64,{}'.format(b64),
+            type='image/svg+xml',
+            style={'maxWidth': '100%', 'height': 'auto'}
+        ),
+        style={'width': '100%', 'height': '2500px'}
+    )

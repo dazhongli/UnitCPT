@@ -23,7 +23,7 @@ navbar = dbc.Navbar(
                     dbc.Col(html.Img(src=app.get_asset_url(
                         arup_logo), height='30x')),
                     dbc.Col(dbc.NavbarBrand(
-                        'Offshore CPT', className='ml-2')),
+                        'UnitCPT', className='ml-2')),
                     dbc.Col(dbc.NavLink('Project', href='project')),
                     dbc.Col(dbc.NavLink("Data", href='data_process')),
                     dbc.Col(dbc.NavLink('CPT', href='CPT')),

@@ -1,11 +1,15 @@
+from copy import copy
+
 import numpy as np
 import pandas as pd
-from numpy import pi
-from numpy import degrees, radians, tan
-from src.soil import Stratum
-import src.utilities as ult
-from numpy import vectorize
-from copy import copy
+import plotly.graph_objects as go
+from numpy import degrees, pi, radians, tan, vectorize
+from plotly.subplots import make_subplots
+
+from . import utilities as ult
+from .soil import Stratum
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 
 
 def fs(sigma_v, su, alpha, beta, drainage, reduction_ud=1.0, reduction_dr=1.0):
@@ -18,7 +22,7 @@ class Pile:
 
 
 class PipePile(Pile):
-    def __init__(self, dia, thickness, length, corrosion=0):
+    def __init__(self, dia, thickness, length, penetration, corrosion=0):
         '''
         Initialise the pile with diameter and thickness
         All the thickness input should be in 'm'
@@ -28,6 +32,7 @@ class PipePile(Pile):
         self.t = thickness
         self.corrosion = corrosion
         self.length = length
+        self.penetration = penetration
         self.refresh()
 
         ###
@@ -91,6 +96,90 @@ class PipePile(Pile):
                         Q_total=Q_outside+Q_inside+Qb_wall,
                         Detail_calc=df_pile)
         soil.df_soil = df_original
+
+    def plot(self):
+        # Check that pile_length is non-zero
+        if self.length == 0:
+            raise ValueError('pile_length must be non-zero')
+        penetration = self.penetration
+        diameter = self.dia_out
+        thickness = self.t
+        pile_length = self.length
+        toe_depth = penetration
+        top_level = toe_depth - pile_length
+        bottom_level = toe_depth
+
+        # Define the data for the pile
+        pile_vertices = [[-diameter/2, top_level], [diameter/2, top_level],
+                         [diameter/2, bottom_level], [-diameter/2, bottom_level], [-diameter/2, top_level]]
+        pile_x, pile_y = zip(*pile_vertices)
+
+        # Create the figure and axes
+        fig, ax = plt.subplots(figsize=(6, 10))
+
+        # Plot the pile
+        pile = ax.fill(pile_x, pile_y, color='gray')
+        ax.set_xlim(-diameter/2-5, diameter/2+5)
+        ax.set_ylim(bottom_level+5, top_level-diameter/2-5)
+        # ax.set_yticks(np.arange(bottom_level+5, top_level-diameter/2-5, 2))
+        ax.set_xlabel('m')
+        ax.set_ylabel('Pile Penetration')
+
+        # Draw the circle at the top of the pile
+        circle_center = (0, top_level-diameter/2)
+        circle_radius = diameter/2
+        circle = plt.Circle(circle_center, circle_radius,
+                            color='black', fill=False)
+        ax.add_artist(circle)
+
+        # Draw the inner circle
+        circle_center = (0, top_level-diameter/2)
+        circle_radius = (diameter-2*thickness)/2
+        circle = plt.Circle(circle_center, circle_radius,
+                            color='black', fill=False)
+        ax.add_artist(circle)
+
+        # Add the arrow to indicate the diameter of the circle
+        arrow_x = [-diameter/2, diameter/2]
+        arrow_y = [top_level-diameter-0.5]*2
+        arrow_dx = diameter
+        arrow_dy = 0
+        arrow_width = 0.1
+        ax.arrow(arrow_x[0], arrow_y[0], arrow_dx, arrow_dy, width=arrow_width/3, head_width=10*arrow_width /
+                 3, head_length=10*arrow_width/3, length_includes_head=True, color='black', linewidth=0.2)
+        ax.arrow(arrow_x[1], arrow_y[1], -arrow_dx, arrow_dy, width=arrow_width/3, head_width=10*arrow_width /
+                 3, head_length=10*arrow_width/3, length_includes_head=True, color='black', linewidth=0.2)
+        ax.text(0, top_level-diameter-1,
+                f'{diameter:.2f}m', ha='center', va='bottom', fontsize=6)
+
+        # Add the arrow to indicate the length of the pile
+        arrow_x = [pile_x[0]-1, pile_x[0]-1]
+        arrow_y = [top_level, bottom_level]
+        arrow_dx = 0
+        arrow_dy = pile_length
+        arrow_width = 0.1
+
+        # Add arrows at both ends of the arrow line
+        ax.arrow(arrow_x[0], arrow_y[0], arrow_dx, arrow_dy, width=arrow_width/3, head_width=10*arrow_width /
+                 3, head_length=10*arrow_width/3, length_includes_head=True, color='black', linewidth=0.2)
+        ax.arrow(arrow_x[1], arrow_y[1], arrow_dx, -arrow_dy, width=arrow_width/3, head_width=10*arrow_width /
+                 3, head_length=10*arrow_width/3, length_includes_head=True, color='black', linewidth=0.2)
+
+        ax.text(pile_x[0]-2, (bottom_level+top_level)/2,
+                f'{pile_length:.2f}m', ha='right', va='center', fontsize=6, rotation=90)
+
+        ax.set_aspect('equal', adjustable='box')
+
+        # Set the overall title of the figure
+        ax.yaxis.set_visible(True)
+        ax.xaxis.set_visible(False)
+        ax.spines['top'].set_linewidth(0)
+        ax.spines['bottom'].set_linewidth(0)
+        ax.spines['right'].set_linewidth(0)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(6)
+        ax.set_ylabel(ax.get_ylabel(), fontsize=6)
+        return fig, ax
 
 
 class PileCapacityCPT():

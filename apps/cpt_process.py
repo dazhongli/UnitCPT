@@ -1,17 +1,8 @@
 import os
-from pathlib import Path
 
-import dash_bootstrap_components as dbc
-import geopandas as gpd
-import pandas as pd
-import plotly.express as px
-from dash import dash_table, dcc, html
-from dash.dependencies import Input, Output, State
+from UnitCPT import (Path, dbc, gpd, pd, px, app,PROJECT_PATH,GEOPlot,
+                     dcc, html, Input, Output, State, PROJ_DATA, CPT, DashPlot)
 
-from app import PROJ_DATA, PROJECT_PATH, app
-from UnitCPT.src.cpt import CPT
-from UnitCPT.src.dash_plot import DashPlot
-import UnitCPT.src.geoplot as plt
 # ========================================[Global Variables]========================================
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
 cpt_driver = CPT(net_area_ratio=0.85)
@@ -153,7 +144,7 @@ def layout():
             dbc.Col([
                 dbc.Row([content_DIV]),
                 dbc.Row([cpt_plot])
-            ],width=8)
+            ], width=8)
         ], justify='around')
     return layout
 
@@ -172,7 +163,7 @@ def show_CPT_location(n_clicks):
     filename = PROJECT_PATH / project_name / 'data' / 'shp' / 'CPT_coords.json'
     assert (filename.exists())
     gdf = gpd.read_file(filename)
-    fig = plt.GEOPlot.get_figure(orientation='h')
+    fig =GEOPlot.get_figure(orientation='h')
     # fig = __dash_plotter__.plot_scatter(gdf)
     fig = __dash_plotter__.plot_point_mapbox(
         gdf=gdf, hoverinfo='CPT', fig=fig, instrument_type='CPT', mode='markers+text')
