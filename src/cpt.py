@@ -12,6 +12,7 @@ from numpy import degrees, log10, pi, radians, tan
 from .geoplot import GEOPlot
 from .ags import AGSParser
 from .utilities import to_numeric_all, plot_showgrid
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -113,8 +114,8 @@ class CPT:
 
     def read_ags(self, filename, unit=['MPa', 'MPa', 'MPa'], ags_format=2):
         '''
-        Call the AGSParse module to read the ags data in. 
-        Delete the first two rows of the data, which are supposed to include the unit 
+        Call the AGSParse module to read the ags data in.
+        Delete the first two rows of the data, which are supposed to include the unit
         '''
 
         with open(filename) as fin:
@@ -235,7 +236,7 @@ class CPT:
     def plot_SBTn_full(self, plotname=''):
         '''
         Plot the SBTn of the data within df
-        required column names of the dataframe will be 
+        required column names of the dataframe will be
         ['SCPT_DPTH','SCPT_PWP2','Fr',]
         '''
         df = self.df
@@ -310,8 +311,8 @@ class CPT:
 
     def set_data_unit(self, unit=['MPa', 'MPa', 'MPa']):
         '''
-        Some format of data present a different setting of the data unit, we would prefer that 
-        qc in MPa, fs and PWP in kPa, for the simplicity, we will need to the key to be consistent 
+        Some format of data present a different setting of the data unit, we would prefer that
+        qc in MPa, fs and PWP in kPa, for the simplicity, we will need to the key to be consistent
         with the ags format, i.e., SCPT_RES, SCPT_FRES and SCPT_PWP2
         '''
         if self.unit_set == False:
@@ -327,7 +328,7 @@ class CPT:
 
     def update_data_column_name(self, columns=[]):
         '''
-        The name of columns should be 
+        The name of columns should be
         SCPT_DPTH - Depth of Cone
         SCPT_FRES - Shaft Resistance
         SCPT_RES - Cone Resistance
@@ -449,7 +450,7 @@ class CPT:
         '''
         Calculate the relative density Dr. based on the CPT data
         Jamiolkowski, M., Lo Presti, D. C. F., & Manassero, M. (2003).
-        Evaluation of relative density and shear strength of sands from CPT and DMT. 
+        Evaluation of relative density and shear strength of sands from CPT and DMT.
         In Soil behavior and soft ground construction (pp. 201-238).
         qt: in MPa
         sigma_v: in kPa
@@ -559,7 +560,7 @@ class CPT:
 
     def shaft_friction(self, pile, delta_cv=28.5, method=CPTMethod.UWA_05, compression=True, consider_clay=False):
         '''
-        This function returns the unit shaft friction along the pile 
+        This function returns the unit shaft friction along the pile
         Qf = diameter * tau(z)
         '''
 
@@ -619,7 +620,7 @@ class CPT:
 
     def gamma_total(self, Rf, qt):
         '''
-        Rf : Ratio of the shaft friction to the corrected cone resistance, i.e., fs/qt 
+        Rf : Ratio of the shaft friction to the corrected cone resistance, i.e., fs/qt
         '''
         return 9.8*((0.27*np.log10(Rf)) + 0.36*(np.log10(qt*1000/PA)) + 1.236)
 
@@ -652,6 +653,34 @@ class CPT:
         fig.update_xaxes(range=[0, 50], title='qc (MPa)', side='top')
         fig.update_layout(legend=dict(orientation='h'), width=800, height=800)
         return fig
+
+    @classmethod
+    def plot_qc_matplotlib(cls, df, qc='qc (MPa)', depth='Depth (m)', Ic='Ic', ax=None):
+         if ax is None:
+             fig, ax = plt.subplots(figsize=(8, 8))
+         # Fill the area under the curve with different colors based on the value of Ic
+         ax.fill_betweenx(df[depth], np.where(df[Ic] < 0.65, df[qc], 0), 0,
+                          color=(59/255, 225/255, 93/255, 0.9), label='Gravelly sand to dense sand', step='pre', interpolate=True, alpha=0.2)
+         ax.fill_betweenx(df[depth], np.where((df[Ic] >= 0.65) & (df.Ic < 1.875), df[qc], 0), 0,
+                          color=(0/255, 178/255, 47/255, 0.3), label='Sands - clean sand to silty sand', step='pre', interpolate=True, alpha=0.2)
+         ax.fill_betweenx(df[depth], np.where((df[Ic] > 1.875) & (df.Ic < 2.525), df[qc], 0), 0,
+                          color=(63/255, 123/255, 26/255, 0.3), label='Sand mixtures - silty sand to sandy silt', step='pre', interpolate=True, alpha=0.2)
+         ax.fill_betweenx(df[depth], np.where((df[Ic] > 2.525) & (df.Ic < 2.975), df[qc], 0), 0,
+                          color=(114/255, 58/255, 164/255, 0.4), label='Silt mixture - Clayey silt to silty clay', step='pre', interpolate=True, alpha=0.2)
+         ax.fill_betweenx(df[depth], np.where((df[Ic] > 2.975) & (df.Ic < 3.475), df[qc], 0), 0,
+                          color=(61/255, 58/255, 79/255, 0.5), label='Clays - silty clay to clay', step='pre', interpolate=True, alpha=0.2)
+         ax.fill_betweenx(df[depth], np.where(df[Ic] > 3.475, df[qc], 0), 0,
+                          color=(0/255, 68/255, 48/255, 0.5), label='Organic Soils - clay', step='pre', interpolate=True, alpha=0.2)
+         # Plot the qc curve
+         ax.plot(df[qc], df[depth], '-k', linewidth=1, label='qc')
+         ax.invert_yaxis()
+         ax.set_ylim([30, 0])
+         ax.set_xlim([0, 60])
+         ax.set_xlabel('qc (MPa)')
+         ax.set_ylabel('Depth (m)')
+         ax.legend(loc='upper left', bbox_to_anchor=(0, 1.15), ncol=2)
+
+         return ax.get_figure(), ax
 
     def calc_CSR(self, PGA):
         '''

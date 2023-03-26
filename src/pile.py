@@ -9,7 +9,7 @@ from plotly.subplots import make_subplots
 from . import utilities as ult
 from .soil import Stratum
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
+import matplotlib
 
 
 def fs(sigma_v, su, alpha, beta, drainage, reduction_ud=1.0, reduction_dr=1.0):
@@ -36,6 +36,7 @@ class PipePile(Pile):
         self.refresh()
 
         ###
+
     def refresh(self):
         self.corroded_dia = self.dia_out - 2*self.corrosion
         self.dia_inner = self.dia_out - 2*self.t
@@ -97,7 +98,7 @@ class PipePile(Pile):
                         Detail_calc=df_pile)
         soil.df_soil = df_original
 
-    def plot(self):
+    def plot(self, ax=None):
         # Check that pile_length is non-zero
         if self.length == 0:
             raise ValueError('pile_length must be non-zero')
@@ -115,7 +116,10 @@ class PipePile(Pile):
         pile_x, pile_y = zip(*pile_vertices)
 
         # Create the figure and axes
-        fig, ax = plt.subplots(figsize=(6, 10))
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(6, 10))
+        else:
+            fig = ax.get_figure()
 
         # Plot the pile
         pile = ax.fill(pile_x, pile_y, color='gray')
@@ -179,6 +183,33 @@ class PipePile(Pile):
         for tick in ax.yaxis.get_major_ticks():
             tick.label.set_fontsize(6)
         ax.set_ylabel(ax.get_ylabel(), fontsize=6)
+        return fig, ax
+
+    def plot_cpt(self, cpt, **args):
+        fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(8, 12))
+        plt.subplots_adjust(wspace=0.02)
+        ax1.spines['left'].set_visible(False)
+        ax1.spines['left'].set_visible(True)
+        ax2.spines['left'].set_visible(False)
+        ax1.spines['right'].set_visible(False)
+        ax2.spines['top'].set_visible(True)
+        ax2.spines['bottom'].set_visible(False)
+        ax2.spines['right'].set_visible(False)
+        ax2.legend(fontsize=6, bbox_to_anchor=(1.05, 1), loc='upper left',
+                   borderaxespad=0., title='Soil Type', title_fontsize=6)
+        # plot cpt
+        fig, ax = cpt.plot_qc_matplotlib(cpt.df, ax=ax2, **args)
+        # Plot pile
+        self.plot(ax=ax1)
+        # Format the figure
+        ax2.xaxis.set_ticks_position('top')
+        ax2.set_xlim([0, 50])
+        ax2.set_ylabel('')
+        ax2.xaxis.set_label_position('top')
+        ax1.yaxis.set_ticks_position('left')
+        ax2.set_xlabel('qc (MPa)')
+        matplotlib.rcParams.update({'font.size': 10})
+
         return fig, ax
 
 
