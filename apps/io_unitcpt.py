@@ -1,5 +1,5 @@
 from UnitCPT import gpd, CPT, Path, pd
-from UnitCPT.proj import PROJ_DATA
+from UnitCPT.app import PROJ_DATA
 
 
 def read_proj_coords(project_path, project_name):

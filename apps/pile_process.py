@@ -4,7 +4,8 @@ import io
 import matplotlib.pyplot as plt
 
 from UnitCPT import (Input, Output, Path, PipePile, app, dash_table, dbc, dcc,
-                     html, pd, px)
+                     html, pd, px, PROJ_DATA)
+from UnitCPT.apps.io_unitcpt import get_cpt, read_proj_coords
 
 __pile__ = PipePile(dia=3.5, thickness=0.05, length=70, penetration=60)
 
@@ -301,7 +302,7 @@ def update_pile_geometry(diameter, thickness, length, penetration, cpt_id):
     except Exception as e:
         print(e)
         fig, ax = __pile__.plot()
-    resize_figure(fig, 1500, 5000, 600)
+    resize_figure(fig, 4000, 5000, 600)
 
     # Serialize the plot to a base64-encoded string
     buf = io.BytesIO()

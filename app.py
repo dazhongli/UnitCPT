@@ -27,8 +27,10 @@ app.config.suppress_callback_exceptions = True
 app.title = 'Offshore Cone Penetration Test and Foundation Design'
 # Global Parameters
 PROJECT_PATH = Path('./projects')  # default path for the project
+
 PROJ_DATA = ult.read_input_file('./data.yml')
 PROJ_DATA['mapbox_token'] = open('./data/mapbox/mapbox_token').read()
+PROJ_DATA['proj_path'] = PROJECT_PATH
 
 
 def save_project_data():  # save the current data to a file for the next load

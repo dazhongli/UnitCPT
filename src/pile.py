@@ -195,8 +195,8 @@ class PipePile(Pile):
         ax2.spines['top'].set_visible(True)
         ax2.spines['bottom'].set_visible(False)
         ax2.spines['right'].set_visible(False)
-        ax2.legend(fontsize=6, bbox_to_anchor=(1.05, 1), loc='upper left',
-                   borderaxespad=0., title='Soil Type', title_fontsize=6)
+        # fig.legend(fontsize=6, bbox_to_anchor=(0.5, 1), loc='upper left',
+        #    borderaxespad=0., title='Soil Type', title_fontsize=6,mode='expand')
         # plot cpt
         fig, ax = cpt.plot_qc_matplotlib(cpt.df, ax=ax2, **args)
         # Plot pile
@@ -208,7 +208,7 @@ class PipePile(Pile):
         ax2.xaxis.set_label_position('top')
         ax1.yaxis.set_ticks_position('left')
         ax2.set_xlabel('qc (MPa)')
-        matplotlib.rcParams.update({'font.size': 10})
+        matplotlib.rcParams.update({'font.size': 6})
 
         return fig, ax
 
