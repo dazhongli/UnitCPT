@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from UnitCPT import (Input, Output, Path, PipePile, app, dash_table, dbc, dcc,
                      html, pd, px)
 
+__pile__ = PipePile(dia=3.5, thickness=0.05, length=70, penetration=60)
+
 pile_dim_card = dbc.Card(
     [
         dbc.CardHeader("Pile Dimension"),
@@ -16,7 +18,7 @@ pile_dim_card = dbc.Card(
                         dbc.Col(html.Label("Pile Diameter (m)",
                                 style={"font-size": "12pt"}), width=6),
                         dbc.Col(dcc.Input(id="input-diameter",
-                                type="number", value=3.5), width=6),
+                                type="number", value=__pile__.dia_out), width=6),
                     ],
                     align="center",
                 ),
@@ -25,7 +27,7 @@ pile_dim_card = dbc.Card(
                         dbc.Col(html.Label("Pile Thickness (mm)",
                                 style={"font-size": "12pt"}), width=6),
                         dbc.Col(dcc.Input(id="input-thickness",
-                                type="number", value=50), width=6),
+                                type="number", value=__pile__.t*1000), width=6),
                     ],
                     align="center",
                 ),
@@ -34,7 +36,7 @@ pile_dim_card = dbc.Card(
                         dbc.Col(html.Label("Pile Embedment (m)",
                                 style={"font-size": "12pt"}), width=6),
                         dbc.Col(dcc.Input(id="input-embedment",
-                                type="number", value=60), width=6),
+                                type="number", value=__pile__.penetration), width=6),
                     ],
                     align="center",
                 ),
@@ -43,7 +45,7 @@ pile_dim_card = dbc.Card(
                         dbc.Col(html.Label("Pile Length (m)",
                                 style={"font-size": "12pt"}), width=6),
                         dbc.Col(dcc.Input(id="input-length",
-                                type="number", value=70), width=6),
+                                type="number", value=__pile__.length), width=6),
                     ],
                     align="center",
                 ),
@@ -180,26 +182,56 @@ pile_resp_card = dbc.Card(
     ],
     id="pile-resp-card",
 )
-sidebar = html.Div(
-    [
-        html.H4("Input"),
-        html.Label("Geological condition"),
-        dcc.Dropdown(
-            options=[
-                {"label": "Location 1", "value": "loc1"},
-                {"label": "Location 2", "value": "loc2"},
-                {"label": "Location 3", "value": "loc3"},
-            ],
-            value="loc1",
-        ),
-        pile_dim_card,
-        loading_card,
-        pile_soil_card,
-        pile_resp_card
-    ],
-    className="sidebar",
-)
+df = read_proj_coords(PROJ_DATA['proj_path'], PROJ_DATA['active_project'])
 
+CPT_card = dbc.Card(
+    [
+        dbc.CardHeader("CPT Data"),
+        dbc.CardBody(
+            [
+                dbc.Row(
+                    [
+                        dbc.Col(html.Label('Select CPT Data', style={
+                            'fontSize': '12px'}), width=3),
+                        dbc.Col(dcc.Dropdown(
+                            id='cpt-dropdown',
+                            options=[{'label': x, 'value': x}
+                                for x in df['CPT']],
+                            value=df.index[0]
+                        ), width=9)
+                    ],
+                    align='center'
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(html.Label('Upload CPT Data', style={
+                            'fontSize': '12px'}), width=3),
+                        dbc.Col(dcc.Upload(
+                            id='cpt-upload',
+                            children=html.Div([
+                                'Drag and Drop or ',
+                                html.A('Select Files')
+                            ]),
+                            style={
+                                'width': '100%',
+                                'height': '60px',
+                                'lineHeight': '60px',
+                                'borderWidth': '1px',
+                                'borderStyle': 'dashed',
+                                'borderRadius': '5px',
+                                'textAlign': 'center',
+                                'margin': '10px'
+                            },
+                            multiple=False
+                        ), width=9)
+                    ],
+                    align='center'
+                ),
+                html.Div(id='output-data-upload')
+            ]
+        )
+    ]
+)
 
 graphs = html.Div(
     [
@@ -211,6 +243,17 @@ graphs = html.Div(
 )
 
 # layout = html.Div([sidebar, graphs])
+
+sidebar = html.Div(
+    [
+        CPT_card,
+        pile_dim_card,
+        loading_card,
+        pile_soil_card,
+        pile_resp_card
+    ],
+    className="sidebar",
+)
 
 
 def layout():
@@ -228,22 +271,36 @@ def resize_figure(fig, width_px, height_px, dpi):
     height_in = height_px / dpi
     fig.set_size_inches(width_in, height_in)
 
+
 # ---------------------------------------[Callback]-------------------------------------------------
 # callback for pile dimension
 
 
+# Pile Shape Update
 @app.callback(
     Output('fig-pile-shape', 'children'),
     [Input('input-diameter', 'value'),
      Input('input-thickness', 'value'),
      Input('input-length', 'value'),
-     Input('input-embedment', 'value')
-     ]
+     Input('input-embedment', 'value'),
+     Input('cpt-dropdown', 'value')
+     ],
+    prevent_initial_callbacks=True
 )
-def update_pile_geometry(diameter, thickness, length, penetration):
-    pile = PipePile(dia=diameter, thickness=thickness/1000,
-                    penetration=penetration, length=length)
-    fig, ax = pile.plot()
+def update_pile_geometry(diameter, thickness, length, penetration, cpt_id):
+    __pile__.dia_out = diameter
+    __pile__.t = thickness/1000
+    __pile__.penetration = penetration
+    __pile__.length = length
+    __pile__.refresh()
+
+    cpt_filename = f'{cpt_id}.json'
+    try:
+        cpt = get_cpt(cpt_filename, PROJ_DATA)
+        fig, ax = __pile__.plot_cpt(cpt)
+    except Exception as e:
+        print(e)
+        fig, ax = __pile__.plot()
     resize_figure(fig, 1500, 5000, 600)
 
     # Serialize the plot to a base64-encoded string

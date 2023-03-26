@@ -1,10 +1,7 @@
 from copy import copy
 
 import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
-from numpy import degrees, pi, radians, tan, vectorize
-from plotly.subplots import make_subplots
+from numpy import pi, radians, tan
 
 from . import utilities as ult
 from .soil import Stratum
@@ -186,6 +183,9 @@ class PipePile(Pile):
         return fig, ax
 
     def plot_cpt(self, cpt, **args):
+        '''
+        This plot cpt data at the side of the pile
+        '''
         fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(8, 12))
         plt.subplots_adjust(wspace=0.02)
         ax1.spines['left'].set_visible(False)
