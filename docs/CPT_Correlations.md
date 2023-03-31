@@ -5,9 +5,13 @@ This document presents the correlation implemented in the current code.
 
 ### Unit Weight
 
-> Robertson (2010) 
+> Robertson (2010), refer to say 
 
-$$ \gamma/\gamma_w = 0.27[\log(R_f)] + 0.36 [\log(q_t/p_a)] + 1.236$$ 1
+$$
+\begin{equation}
+\gamma/\gamma_w = 0.27[\log(R_f)] + 0.36 [\log(q_t/p_a)] + 1.236
+\end{equation}
+$$
 
 - $\gamma$ = unit weight of soil
 - $\gamma_w$ = unit weight of water
@@ -18,8 +22,13 @@ $$ \gamma/\gamma_w = 0.27[\log(R_f)] + 0.36 [\log(q_t/p_a)] + 1.236$$ 1
 ### Relative Density
 
 > Jamiolkowski (2003), Table 5 on Page 9. 
-> The original form of relative density can be expressed as $$ D_R = \frac{1}{C_2}$$
 
+ The original form of relative density can be expressed as 
+ $$ 
+    \begin{equation}
+        D_R = \frac{1}{C_2}
+    \end{equation}
+$$
 $$ D_r = \frac{1}{3.10}\cdot \ln\bigg[\frac{q_t/P_a}{17.68\cdot(\sigma_{v0}'/P_a))^{0.5}}\bigg]$$
 
 ### Friction Angle

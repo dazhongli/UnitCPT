@@ -1,0 +1,318 @@
+%%
+% Copyright (c) 2017, Pascal Wagler;  
+% Copyright (c) 2014--2017, John MacFarlane
+% 
+% All rights reserved.
+% 
+% Redistribution and use in source and binary forms, with or without 
+% modification, are permitted provided that the following conditions 
+% are met:
+% 
+% - Redistributions of source code must retain the above copyright 
+% notice, this list of conditions and the following disclaimer.
+% 
+% - Redistributions in binary form must reproduce the above copyright 
+% notice, this list of conditions and the following disclaimer in the 
+% documentation and/or other materials provided with the distribution.
+% 
+% - Neither the name of John MacFarlane nor the names of other 
+% contributors may be used to endorse or promote products derived 
+% from this software without specific prior written permission.
+% 
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+% FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+% COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+% INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+% BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+% LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+% CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+% LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+% POSSIBILITY OF SUCH DAMAGE.
+%%
+
+%%
+% For usage information and examples visit the GitHub page of this template:
+% https://github.com/Wandmalfarbe/pandoc-latex-template
+%%
+
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[12pt,a4paper,]{scrartcl}
+\usepackage{lmodern}
+\usepackage{setspace}
+\setstretch{1.5}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\usepackage{hyperref}
+\hypersetup{
+            pdfauthor={Dazhong Li},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage[margin=2.5cm,includehead=true,includefoot=true,centering,left=3cm,right=3cm,top=1.8cm,bottom=1.8cm]{geometry}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% Make use of float-package and set default placement for figures to H
+\usepackage{float}
+\floatplacement{figure}{H}
+
+
+\title{Scientific Manual for UnitCPT}
+\author{Dazhong Li}
+\date{}
+
+
+
+
+
+%%
+%% added
+%%
+
+%
+% No language specified? take American English.
+%
+
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[shorthands=off,main=english]{babel}
+\else
+  % See issue https://github.com/reutenauer/polyglossia/issues/127
+  \renewcommand*\familydefault{\sfdefault}
+  % load polyglossia as late as possible as it *could* call bidi if RTL lang (e.g. Hebrew or Arabic)
+  \usepackage{polyglossia}
+  \setmainlanguage[]{english}
+\fi
+
+
+%
+% colors
+%
+\usepackage[dvipsnames,svgnames*,x11names*,table]{xcolor}
+
+%
+% listing colors
+%
+\definecolor{listing-background}{HTML}{F7F7F7}
+\definecolor{listing-rule}{HTML}{B3B2B3}
+\definecolor{listing-numbers}{HTML}{B3B2B3}
+\definecolor{listing-text-color}{HTML}{000000}
+\definecolor{listing-keyword}{HTML}{435489}
+\definecolor{listing-identifier}{HTML}{435489}
+\definecolor{listing-string}{HTML}{00999A}
+\definecolor{listing-comment}{HTML}{8E8E8E}
+\definecolor{listing-javadoc-comment}{HTML}{006CA9}
+
+%\definecolor{listing-background}{rgb}{0.97,0.97,0.97}
+%\definecolor{listing-rule}{HTML}{B3B2B3}
+%\definecolor{listing-numbers}{HTML}{B3B2B3}
+%\definecolor{listing-text-color}{HTML}{000000}
+%\definecolor{listing-keyword}{HTML}{D8006B}
+%\definecolor{listing-identifier}{HTML}{000000}
+%\definecolor{listing-string}{HTML}{006CA9}
+%\definecolor{listing-comment}{rgb}{0.25,0.5,0.35}
+%\definecolor{listing-javadoc-comment}{HTML}{006CA9}
+
+%
+% for the background color of the title page
+%
+
+%
+% TOC depth and 
+% section numbering depth
+%
+\setcounter{tocdepth}{3}
+
+%
+% line spacing
+%
+\usepackage{setspace}
+\setstretch{1.2}
+
+%
+% break urls
+%
+\PassOptionsToPackage{hyphens}{url}
+
+%
+% When using babel or polyglossia with biblatex, loading csquotes is recommended 
+% to ensure that quoted texts are typeset according to the rules of your main language.
+%
+\usepackage{csquotes}
+
+%
+% captions
+%
+\usepackage[font={small,it}]{caption}
+\newcommand{\imglabel}[1]{\textbf{\textit{(#1)}}}
+
+%
+% blockquote
+%
+\definecolor{blockquote-border}{RGB}{221,221,221}
+\definecolor{blockquote-text}{RGB}{119,119,119}
+\usepackage{mdframed}
+\newmdenv[rightline=false,bottomline=false,topline=false,linewidth=3pt,linecolor=blockquote-border,skipabove=\parskip]{customblockquote}
+\renewenvironment{quote}{\begin{customblockquote}\list{}{\rightmargin=0em\leftmargin=0em}%
+\item\relax\color{blockquote-text}\ignorespaces}{\unskip\unskip\endlist\end{customblockquote}}
+
+%
+% Source Sans Pro as the de­fault font fam­ily
+% Source Code Pro for monospace text
+%
+% 'default' option sets the default 
+% font family to Source Sans Pro, not \sfdefault.
+%
+\usepackage[default]{sourcesanspro}
+\usepackage{sourcecodepro}
+
+%
+% heading color
+%
+\definecolor{heading-color}{RGB}{40,40,40}
+\addtokomafont{section}{\color{heading-color}}
+% When using the classes report, scrreprt, book, 
+% scrbook or memoir, uncomment the following line.
+%\addtokomafont{chapter}{\color{heading-color}}
+
+%
+% variables for title and author
+%
+\usepackage{titling}
+\title{Scientific Manual for UnitCPT}
+\author{Dazhong Li}
+
+%
+% environment for boxes
+%
+%\usepackage{framed}
+
+%
+% tables
+%
+
+%
+% remove paragraph indention
+%
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+
+%
+%
+% Listings
+%
+%
+
+
+%
+% header and footer
+%
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\lhead{Scientific Manual for UnitCPT}
+\chead{}
+\rhead{}
+\lfoot{Dazhong Li}
+\cfoot{}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+%%
+%% end added
+%%
+
+\begin{document}
+
+%%
+%% begin titlepage
+%%
+
+
+%%
+%% end titlepage
+%%
+
+
+{
+\setcounter{tocdepth}{}
+\tableofcontents
+}
+<h1 id="cpt-correlation">CPT Correlation</h1>
+<p>This document presents the correlation implemented in the current code. ## Basic Engineering Properties</p>
+<h3 id="unit-weight">Unit Weight</h3>
+<blockquote>
+<p>Robertson (2010)</p>
+</blockquote>
+<p><br /><span class="math display"><em>γ</em>/<em>γ</em><sub><em>w</em></sub> = 0.27[log (<em>R</em><sub><em>f</em></sub>)] + 0.36[log (<em>q</em><sub><em>t</em></sub>/<em>p</em><sub><em>a</em></sub>)] + 1.236</span><br /> 1</p>
+<ul>
+<li><span class="math inline"><em>γ</em></span> = unit weight of soil</li>
+<li><span class="math inline"><em>γ</em><sub><em>w</em></sub></span> = unit weight of water</li>
+<li><span class="math inline"><em>R</em><sub><em>f</em></sub></span> = friction ratio, the ratio of <span class="math inline"><em>f</em><sub><em>s</em></sub></span> over <span class="math inline"><em>q</em><sub><em>t</em></sub></span>, i.e, <span class="math inline">$\frac{f_s}{q_t} \times \text{100\%}$</span></li>
+<li><span class="math inline"><em>q</em><sub><em>t</em></sub></span> = corrected cone resistance</li>
+<li><span class="math inline"><em>P</em><sub><em>a</em></sub></span> = atmospheric pressure</li>
+</ul>
+<h3 id="relative-density">Relative Density</h3>
+<blockquote>
+<p>Jamiolkowski (2003), Table 5 on Page 9. The original form of relative density can be expressed as <br /><span class="math display">$$ D_R = \frac{1}{C_2}$$</span><br /></p>
+</blockquote>
+<p><br /><span class="math display">$$ D_r = \frac{1}{3.10}\cdot \ln\bigg[\frac{q_t/P_a}{17.68\cdot(\sigma_{v0}'/P_a))^{0.5}}\bigg]$$</span><br /></p>
+<h3 id="friction-angle">Friction Angle</h3>
+<p><br /><span class="math display">$$\varphi_p'= 17.6+11\cdot\log_{10}\bigg[\frac{q_t/P_a}{(\sigma_{v0}'/P_a)^{0.5}}\bigg]$$</span><br /></p>
+<h3 id="small-strain-stiffness-g_0">Small Strain Stiffness <span class="math inline"><em>G</em><sub>0</sub></span></h3>
+<p><br /><span class="math display"><em>G</em><sub>0</sub> = 50 ⋅ <em>σ</em><sub><em>a</em><em>t</em><em>m</em></sub>[(<em>q</em><sub><em>t</em></sub> − <em>σ</em><sub><em>v</em>0</sub>/<em>σ</em><sub><em>a</em><em>t</em><em>m</em></sub>]<sup><em>m</em>*</sup></span><br /> where: <br /><span class="math display">$$
+    m^*  = \begin{cases}
+        0.6 &amp; \text{sand} \\
+        0.8 &amp; \text{silt} \\
+        1.0 &amp; \text{clay}
+    \end{cases}
+$$</span><br /></p>
+<h2 id="liquefaction-assessment">Liquefaction Assessment</h2>
+<h2 id="dissipation-tests">Dissipation Tests</h2>
+<h2 id="to-dos">To-dos</h2>
+<ul>
+<li><input type="checkbox" disabled="" />
+check Gamma</li>
+</ul>
+
+\end{document}

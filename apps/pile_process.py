@@ -2,12 +2,28 @@ import base64
 import io
 
 import matplotlib.pyplot as plt
+import dash
 
-from UnitCPT import (Input, Output, Path, PipePile, app, dash_table, dbc, dcc,
+from UnitCPT import (Input, State, Output, Path, PipePile, app, dash_table, dbc, dcc,
                      html, pd, px, PROJ_DATA)
 from UnitCPT.apps.io_unitcpt import get_cpt, read_proj_coords
+from UnitCPT.src.aio_table import AIOTable
+from UnitCPT.src.aio_card import AIOCard
 
 __pile__ = PipePile(dia=3.5, thickness=0.05, length=70, penetration=60)
+# CPT
+label_input_pairs = [('Time', dcc.Input, {'type': 'number'}),
+                     ('Property', dcc.Input, {'type': 'number'})]
+test_card = AIOCard(title='CPT Data', label_input_pairs=label_input_pairs)
+# Loading Input
+label_input_pairs = [('Axial Force(MN)', dcc.Input, {'type': 'number'}),
+                     ('Shear Force(MN)', dcc.Input, {'type': 'number'}),
+                     ('Bending Moment(MN/m)', dcc.Input, {'type': 'number'}),
+                     ('Level', dcc.Input, {'type': 'number'}),
+                     ]
+loading_aiocard = AIOCard(title='Applied Loading',
+                          label_input_pairs=label_input_pairs)
+
 
 pile_dim_card = dbc.Card(
     [
@@ -244,11 +260,16 @@ graphs = html.Div(
 )
 
 # layout = html.Div([sidebar, graphs])
-
+soil_df = pd.DataFrame(dict(name=[], type=[], top=[], bottom=[]))
+cpt_table = AIOTable('soil-param', 'Soil Parameter',
+                     df=soil_df,  save_folder='./')
 sidebar = html.Div(
     [
+        test_card,
+        loading_aiocard,
         CPT_card,
         pile_dim_card,
+        cpt_table.card,
         loading_card,
         pile_soil_card,
         pile_resp_card

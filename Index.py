@@ -69,6 +69,8 @@ def display_page(pathname):
         return cpt_process.layout()
     elif pathname == '/pile':
         return pile_process.layout()
+
+
 #     elif pathname == 'extensometer':
 #         return extensometer.layout
 #     elif pathname == '/progress':
