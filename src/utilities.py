@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 import yaml
 from PyPDF2 import PdfMerger
 
-from .geoplot import GEOPlot
+from geoplot import GEOPlot
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

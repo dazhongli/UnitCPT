@@ -1,14 +1,15 @@
-active_project: 279400-CLP Prelimiary SI
-mapbox_token:
-  "pk.eyJ1IjoiZGF6aG9uZ2xpIiwiYSI6ImNrMnN3NW5lbjBqdDAzaHI2ZHVwOGd3NTkifQ.GA-xYIVfrnWyHpppuMJApQ
-  "
-proj_path: ./projects
+active_project: 274272-HKOLNGT
+mapbox_token: 'pk.eyJ1IjoiZGF6aG9uZ2xpIiwiYSI6ImNrMnN3NW5lbjBqdDAzaHI2ZHVwOGd3NTkifQ.GA-xYIVfrnWyHpppuMJApQ
+
+  '
+proj_path: !!python/object/apply:pathlib.WindowsPath
+- projects
 projects:
-  - label: 279400-CLP Prelimiary SI
-    value: 279400-CLP Prelimiary SI
-  - label: 292027-HKE OWF
-    value: 292027-HKE OWF
-  - label: 292179-Taiwan RWE
-    value: 292179-Taiwan RWE
-  - label: __init_
-    value: __init_
+- label: 279400-CLP Prelimiary SI
+  value: 279400-CLP Prelimiary SI
+- label: 292027-HKE OWF
+  value: 292027-HKE OWF
+- label: 292179-Taiwan RWE
+  value: 292179-Taiwan RWE
+- label: __init_
+  value: __init_

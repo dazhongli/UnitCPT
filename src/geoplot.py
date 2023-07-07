@@ -1,14 +1,15 @@
 import copy
 import json
 import logging
-from itertools import cycle
 import symbol
+from itertools import cycle
 
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.subplots as plt
+import scipy.stats as st
 from plotly.graph_objects import Figure
-import numpy as np
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -141,24 +142,55 @@ class GEOPlot():
         return fig
 
     @classmethod
-    def add_marker_plot(cls, x, y, data, hue, fig=None, row=1, col=1):
+    def add_marker_plot(cls, x, y, data, hue, window_size=10, fig=None, row=1, col=1, statistic=False):
         '''
         x - label of x value
         y - label of y value
         data - dataframe of plot
         hue - sort
+        window_size - size of the window for the moving average (default=10)
+        statistic - whether the moving average and confidence interval should be plotted (default=True)
         '''
         if fig is None:
-            fig = cls.get_figure(rows=1, cols=1)
-        markers = cls.marker_list(open_marker=True)
+            fig = GEOPlot.get_figure(rows=1, cols=1)
+        markers = GEOPlot.marker_list(open_marker=True)
+        data = data.sort_values(by=y)
         df_plot = data.groupby(by=hue)
         for key, group in df_plot:
             x_data = group[x]
             y_data = group[y]
-            fig.add_trace(go.Scatter(x=x_data, y=y_data, name=key, mode='makers', maker=dict(
-                symbol=next(markers))), row=1, col=1)
-        fig.update_xaxes(title=x)
-        fig.update_yaxes(title=y)
+            fig.add_trace(go.Scatter(x=x_data, y=y_data, name=key, mode='markers', marker=dict(
+                symbol=next(markers))), row=row, col=col)
+
+        # Calculate moving average and 95% confidence interval if statistic=True
+        if statistic:
+            x_means = []
+            x_cis_upper = []
+            x_cis_lower = []
+            for i in range(len(data)):
+                if i < window_size:
+                    sub_data = data.iloc[:i+1]
+                else:
+                    sub_data = data.iloc[i-window_size+1:i+1]
+                x_mean = sub_data[x].mean()
+                x_ci = st.t.interval(
+                    0.95, len(sub_data[x])-1, loc=x_mean, scale=st.sem(sub_data[x]))
+                x_means.append(x_mean)
+                x_cis_upper.append(x_ci[1])
+                x_cis_lower.append(x_ci[0])
+
+            # Add moving average line
+            fig.add_trace(go.Scatter(x=x_means, y=data[y], name='Moving Average', mode='lines', line=dict(
+                color='black', width=2)), row=row, col=col)
+
+            # Add 95% confidence interval
+            fig.add_trace(go.Scatter(x=x_cis_upper, y=data[y], mode='lines', line=dict(
+                color='lightblue', width=0), fill='tonextx', showlegend=False), row=row, col=col)
+            fig.add_trace(go.Scatter(x=x_cis_lower, y=data[y], mode='lines', line=dict(
+                color='lightblue', width=0), fill='tonextx', name='95% CI'), row=row, col=col)
+
+        fig.update_xaxes(title=x, row=row, col=col)
+        fig.update_yaxes(title=y, row=row, col=col)
         return fig
 
     @ classmethod
@@ -169,6 +201,84 @@ class GEOPlot():
         with open(filename) as fin:
             x = json.load(fin)
         return go.Figure(x)
+
+    @classmethod
+    def plot_distribution(cls, df, col_name):
+        """
+        Plot distribution of a column in a dataframe and fit a normal distribution to it.
+
+        Args:
+        - df: pandas dataframe
+        - col_name: name of column to plot
+
+        Returns:
+        - fig: plotly figure object
+        """
+        # Get column data
+        col_data = df[col_name]
+
+        # Calculate mean and standard deviation
+        col_mean = col_data.mean()
+        col_std = col_data.std()
+
+        # Create histogram trace
+        hist_trace = go.Histogram(x=col_data, nbinsx=30, name='Histogram',
+                                  histnorm='probability density', marker_color='grey')
+
+        # Create normal distribution trace
+        x_range = np.linspace(col_data.min()-3*col_std,
+                              col_data.max()+3*col_std, num=100)
+        y_range = (
+            np.exp(-0.5 * ((x_range - col_mean) / col_std) ** 2) /
+            (col_std * np.sqrt(2 * np.pi))
+        )
+        norm_trace = go.Scatter(
+            x=x_range, y=y_range, mode='lines', name='Normal Distribution', line_color='blue')
+
+        # Create figure layout
+        fig_layout = go.Layout(title=f"Distribution Plot of {col_name}", xaxis_title=col_name, yaxis_title='Probability Density',
+                               width=800, height=600, margin=go.layout.Margin(l=50, r=50, b=50, t=50, pad=4),
+                               plot_bgcolor='rgb(240,240,240)', paper_bgcolor='rgb(240,240,240)',
+                               xaxis=dict(showline=True, linewidth=2,
+                                          linecolor='black', mirror=True),
+                               yaxis=dict(showline=True, linewidth=2, linecolor='black', mirror=True))
+
+        # Combine traces and layout into figure
+        fig = go.Figure(data=[hist_trace, norm_trace], layout=fig_layout)
+
+        # Add mean and standard deviation annotations to figure
+        fig.add_annotation(
+            x=col_mean, y=0, text=f"Mean: {col_mean:.2f}", showarrow=False, ax=0, ay=-40)
+        fig.add_annotation(x=col_mean+col_std, y=np.interp(col_mean+col_std, x_range,
+                           y_range), text=f"std: {col_mean+col_std:.2f}", showarrow=False, ax=0, ay=-40)
+        fig.add_annotation(x=col_mean-col_std, y=np.interp(col_mean-col_std, x_range,
+                           y_range), text=f"std: {col_mean-col_std:.2f}", showarrow=False, ax=0, ay=-40)
+
+        # Add vertical lines for mean and +/- 1 standard deviation
+        fig.add_shape(type='line',
+                      x0=col_mean, y0=0, x1=col_mean, y1=max(y_range),
+                      line=dict(color='red', dash='dash', width=2))
+        fig.add_shape(type='line',
+                      x0=col_mean+col_std, y0=0, x1=col_mean+col_std, y1=np.interp(col_mean+col_std, x_range, y_range),
+                      line=dict(color='green', dash='dash', width=2))
+        fig.add_shape(type='line',
+                      x0=col_mean-col_std, y0=0, x1=col_mean-col_std, y1=np.interp(col_mean-col_std, x_range, y_range),
+                      line=dict(color='green', dash='dash', width=2))
+
+        # Add vertical lines for mean+/-1std and mean+/-2std
+        for i, std in enumerate([2]):
+            x_pos = col_mean + (std * col_std)
+            y_pos = np.interp(x_pos, x_range, y_range)
+            fig.add_annotation(
+                x=x_pos, y=y_pos, text=f"{std} Std: {x_pos:.2f}", showarrow=False, ax=0, ay=-40)
+            fig.add_shape(type='line',
+                          x0=x_pos, y0=0, x1=x_pos, y1=y_pos,
+                          line=dict(color=['purple', 'green', 'orange'][i], dash='dot', width=1))
+            fig.add_shape(type='line',
+                          x0=col_mean - (std * col_std), y0=0, x1=col_mean - (std * col_std), y1=np.interp(col_mean - (std * col_std), x_range, y_range),
+                          line=dict(color=['purple', 'green', 'orange'][i], dash='dot', width=1))
+
+        return fig.update_layout(width=800, height=600)
 
     @ classmethod
     def get_color(cls, color_type='Plotly'):

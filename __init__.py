@@ -8,7 +8,6 @@ from dash import dash_table, dcc, html
 from dash.dependencies import Input, Output, State
 
 import UnitCPT.src.geoplot as geoplot
-from app import PROJ_DATA, PROJECT_PATH, app
 from UnitCPT.src.cpt import CPT
 from UnitCPT.src.dash_plot import DashPlot
 from UnitCPT.src.geoplot import GEOPlot
