@@ -106,6 +106,7 @@ $$
 
 where 
 $\sigma_{rc}'$ refers to the radial confined stress, which can be correlated to the CPT cone tip resistance by Eq.(\ref{eq_rc}).
+
 $$
 \begin{equation} [label@eq_rc]
 \sigma_{rc}'= \frac{q_c}{44}\cdot A_{re}^{0.3}\cdot \big[\mathrm{max}(1,\frac{h}{D})\big]^{-0.4}
@@ -117,6 +118,7 @@ $$
     \Delta\sigma_{rd}' = \frac{q_c}{10}\cdot\bigg(\frac{q_c}{\sigma_v'}\bigg)^{-0.33}\cdot\frac{d_{ref}}{D}
 \end{equation}
 $$
+where $D$ is the pile outer diameters, $d_{ref}$
 
 $$
 \begin{equation}
