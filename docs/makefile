@@ -2,7 +2,7 @@
 ENV = C:/ProgramData/Miniconda3/envs/route11
 BIB :=
 INTERPRETER = $(ENV)/python
-PANDOC_OPTIONS = -s --template=eisvogel.latex --listings --number-section
+PANDOC_OPTIONS = -s --template=eisvogel.latex --listings --number-section --filter=pandoc-citeproc
 # Define a list of Python scripts to execute
 SCRIPTS = report
 
