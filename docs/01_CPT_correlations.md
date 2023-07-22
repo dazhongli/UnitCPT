@@ -107,10 +107,6 @@ $$
 ### $\alpha$ Approach
 This method will require the input of the undrained shear strength $s_u$. To directly link this 
 
-
-
-
-
 $$
 \begin{equation}
 f(z) = \alpha\cdot s_u(z)
@@ -229,4 +225,5 @@ In intermediate soils, CPT would be partially drained. Neither sand or clay meth
 
 \pagebreak
 # Reference 
+
 

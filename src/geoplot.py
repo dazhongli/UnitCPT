@@ -277,6 +277,10 @@ class GEOPlot():
             fig.add_shape(type='line',
                           x0=col_mean - (std * col_std), y0=0, x1=col_mean - (std * col_std), y1=np.interp(col_mean - (std * col_std), x_range, y_range),
                           line=dict(color=['purple', 'green', 'orange'][i], dash='dot', width=1))
+        fig.update_layout(
+            plot_bgcolor="white",
+            paper_bgcolor="white"
+        )
 
         return fig.update_layout(width=800, height=600)
 

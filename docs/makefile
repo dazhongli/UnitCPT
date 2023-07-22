@@ -5,21 +5,27 @@ INTERPRETER = $(ENV)/python
 PANDOC_OPTIONS = -s --template=eisvogel.latex --listings --number-section --filter=pandoc-citeproc
 # Define a list of Python scripts to execute
 SCRIPTS = report
-
+MD_FILES = $(wildcard *.md)
+TXT_FILES = $(sort $(subst .md,.txt, $(MD_FILES)))
 # Define the default target
+
+$(info $(MD_FILES))
+$(info $(TXT_FILES))
+
 all: $(SCRIPTS)
 
 
 # Define a target to execute all Python scripts
 run: all
 
-report: 
+report.pdf: $(TXT_FILES)
 	mkdir -p report_output
-	python convert_data.py
-	pandoc temp.md $(PANDOC_OPTIONS) -o report_output/CPT_correlations.pdf
-	rm -f temp.md
-	cmd /c start report_output/CPT_correlations.pdf
+	pandoc $^ $(PANDOC_OPTIONS) -o $@
+	rm -f $(TXT_FILES)
+	cmd /c start $@
 
+%.txt: %.md
+	python convert_data.py $< $@
 
 clean:
 	rm -f *.html
