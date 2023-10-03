@@ -26,7 +26,7 @@ px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
 
 
 # ========================================[Global Variables]========================================
-__ags_parser__ = AGSParser(ags_str='', ags_format=2)
+__ags_parser__ = AGSParser(ags_str='')
 
 
 # ========================================[Global Funcs]========================================

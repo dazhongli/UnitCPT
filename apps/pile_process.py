@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import dash
 
 from UnitCPT import (Input, State, Output, Path, PipePile, app, dash_table, dbc, dcc,
-                     html, pd, px, PROJ_DATA)
+                     html, pd, px)
 from UnitCPT.apps.io_unitcpt import get_cpt, read_proj_coords
 from UnitCPT.src.aio_table import AIOTable
 from UnitCPT.src.aio_card import AIOCard
+from app import PROJ_DATA, app
 
 __pile__ = PipePile(dia=3.5, thickness=0.05, length=70, penetration=60)
 # CPT

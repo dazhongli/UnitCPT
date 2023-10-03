@@ -1,10 +1,12 @@
-active_project: 274272-HKOLNGT
+active_project: 279400-CLP Prelimiary SI
 mapbox_token: 'pk.eyJ1IjoiZGF6aG9uZ2xpIiwiYSI6ImNrMnN3NW5lbjBqdDAzaHI2ZHVwOGd3NTkifQ.GA-xYIVfrnWyHpppuMJApQ
 
   '
 proj_path: !!python/object/apply:pathlib.WindowsPath
 - projects
 projects:
+- label: 274272-HKOLNGT
+  value: 274272-HKOLNGT
 - label: 279400-CLP Prelimiary SI
   value: 279400-CLP Prelimiary SI
 - label: 292027-HKE OWF

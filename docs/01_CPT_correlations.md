@@ -5,24 +5,27 @@ author: "Dazhong Li"
 fontsize: 11pt
 titlepage: true
 colorlinks: true
-geometry: "left=2cm,right=2cm,top=1.8cm,bottom=1.8cm"
+geometry: "left=2cm,right=2cm,top=2.5cm,bottom=3.0cm"
+table-use-row-colors: false
 toc: true
 lof: true
 linestretch: 1.0
 papersize: a4
 bibliography: "bib.bib"
 csl: "cambridge-university-press-author-date.csl"
-book: true
+book: false
 date: 2023
 link-citations: true
-math: "$$"
 
 ---
 \pagebreak
 
-# CPT Correlation
+# CPT Document
+
+## CPT Correlation
 
 This document presents the correlation implemented in the current code.
+
 ## Basic Engineering Properties
 
 ### Unit Weight
@@ -34,8 +37,6 @@ $$
 \gamma/\gamma_w = 0.27[\log(R_f)] + 0.36 [\log(q_t/p_a)] + 1.236
 \end{equation}
 $$
-
-
 
 - $\gamma$ = unit weight of soil
 - $\gamma_w$ = unit weight of water
@@ -94,7 +95,7 @@ $$
 ## To-dos
 \pagebreak
 
-# Unified CPT Method
+## Unified CPT Method
 
 Pile capacity can be calculated as:
 $$
@@ -224,6 +225,6 @@ In intermediate soils, CPT would be partially drained. Neither sand or clay meth
  - In the absence of more definitive criteria, may consider the minimum of the capacity based on Clay or Sand
 
 \pagebreak
-# Reference 
+
 
 

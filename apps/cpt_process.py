@@ -1,8 +1,8 @@
 import os
 
-from UnitCPT import (Path, dbc, gpd, pd, px, app,PROJECT_PATH,GEOPlot,
-                     dcc, html, Input, Output, State, PROJ_DATA, CPT, DashPlot)
-
+from UnitCPT import (Path, dbc, gpd, pd, px, app,GEOPlot,
+                     dcc, html, Input, Output, State,CPT, DashPlot)
+from app import PROJ_DATA, PROJECT_PATH, app
 # ========================================[Global Variables]========================================
 px.set_mapbox_access_token(open('./data/mapbox/mapbox_token').read())
 cpt_driver = CPT(net_area_ratio=0.85)
@@ -151,7 +151,7 @@ def layout():
 # ========================================[Callbacks]========================================
 
 
-@ app.callback(
+@app.callback(
     Output('graph-location-plan', 'figure'),
     Input('btn-show-layout', 'n_clicks')
 )

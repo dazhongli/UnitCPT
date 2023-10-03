@@ -1,8 +1,11 @@
 # Define the Python interpreter to use
 ENV = C:/ProgramData/Miniconda3/envs/route11
-BIB :=
 INTERPRETER = $(ENV)/python
-PANDOC_OPTIONS = -s --template=eisvogel.latex --listings --number-section --filter=pandoc-citeproc
+# PANDOC_OPTIONS = -s --template=eisvogel.latex --listings --number-section --filter=pandoc-citeproc
+PANDOC_OPTIONS = -s  --number-sections --citeproc --template eisvogel
+# PANDOC_OPTIONS = -s  --citeproc --number-sections --listing
+# PANDOC_OPTIONS = -s  --number-section --citeproc 
+# PANDOC_OPTIONS = -s --listings --number-section --citeproc --template=eisvogel.latex_ --csl=cambridge-university-press-author-date.csl
 # Define a list of Python scripts to execute
 SCRIPTS = report
 MD_FILES = $(wildcard *.md)
@@ -12,7 +15,7 @@ TXT_FILES = $(sort $(subst .md,.txt, $(MD_FILES)))
 $(info $(MD_FILES))
 $(info $(TXT_FILES))
 
-all: $(SCRIPTS)
+all: report.pdf
 
 
 # Define a target to execute all Python scripts

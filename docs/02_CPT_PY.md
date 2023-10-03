@@ -4,6 +4,7 @@ bibliography: [bib.bib]
 
 # P-y curves for monotonic actions
 
+This section presents the derivation of the `p-y` curves using @ISO19901_4.  The origin of this update was not clearly documented in the code. 
 ## Clay
 
 $$
@@ -198,3 +199,4 @@ $$
 C_3 = K_a ((\tan{\beta})^8-1) + K_0 + \tan{\phi'}(\tan{\beta})^4
 \end{equation}
 $$
+
