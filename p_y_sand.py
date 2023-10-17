@@ -5,6 +5,18 @@ import plotly.io as pio
 import numpy as np
 import pandas as pd
 from numpy import degrees, log10, pi, radians, tan, sin, cos
+import matplotlib.pyplot as plt
+
+def determine_soil_type(ic):
+    '''
+    This function determines soil type based on 'Ic' value
+    '''
+    if pd.isna(ic):
+        return 'N/A'
+    elif ic > 2.6:
+        return 'clay'
+    else:
+        return 'sand'
 
 def calc_phi_e(qt, sigma_v, sigma_v_e):
     '''
@@ -99,5 +111,41 @@ def calc_p(y, A, pr, z, k):
     This function calculates the lateral soil resistance-displacement p-y relationship for a pile in sand
     '''
     return A * pr * np.tanh(k * z / (A * pr) * y / 1000)
+
+def export_p_y_sand(df, filename):
+    '''
+    Export p-y data to excel
+    '''
+    df.to_excel(filename, index=False)
+    print(f"{filename} has been exported successfully.")
+    #writer = pd.ExcelWriter('data.xlsx')
+    #df.to_excel(writer, sheet_name='Sheet 1')
+    #writer.save()
+
+def plot_p_y_curve(df, rows_to_plot):
+    '''
+    Plot the p-y curve for sand at different depths with specified rows to plot
+    For example, rows_to_plot = [200, 800, 1600, 3200, 5600, 6400]
+    '''
+
+    # Create a figure and axis object
+    fig, ax = plt.subplots()
+
+    # Plot the selected rows
+    for i in rows_to_plot:
+        row = df.iloc[i]
+        x = [row[f'y{j}'] for j in range(11)]
+        y = [row[f'p{j}'] for j in range(11)]
+        depth = round(row['SCPT_DPTH'], 2)
+        ax.plot(x, y, '-o', label=f'Depth: {depth}m')
+
+    # Add labels and legend
+    ax.set_xlabel('y (mm)')
+    ax.set_ylabel('p (kN/m)')
+    ax.legend()
+
+    # Show the plot
+    plt.show()
+    return fig
 
 
