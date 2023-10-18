@@ -148,4 +148,20 @@ def plot_p_y_curve(df, rows_to_plot):
     plt.show()
     return fig
 
+def resample_cpt_data(cpt_data, z0, interval):
+    '''
+    Resample the cpt_data dataframe starting from depth z0 with a desiganated interval
+    '''
+    # Filter the dataframe by depth
+    filtered_cpt_data = cpt_data.df[cpt_data.df['SCPT_DPTH'] > z0]
+        
+    # Set the index of the dataframe to 'depth'
+    filtered_cpt_data.set_index('SCPT_DPTH', inplace=True)
 
+    # Resample the dataframe to a depth interval of 1.0m starting from depth z0
+    resampled_cpt_data = filtered_cpt_data.loc[z0:].resample(interval).asfreq()
+
+    # Reset the index of the dataframe to 'SCPT_DPTH'
+    resampled_cpt_data.reset_index(inplace=True)
+
+    return resampled_cpt_data
