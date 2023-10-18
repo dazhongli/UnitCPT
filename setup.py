@@ -6,13 +6,12 @@ setup(
     author='Dazhong Li',
     author_email='dazhong.li@arup.com',
     description='basic calculation',
-    packages=find_packages(),
+    packages=['src'],
     install_requires=[
         'pandas>1.0',
         'Plotly',
         'matplotlib>3.0',
         'scipy>=1.4',
         'tqdm',
-
-    ],
+    ]
 )
