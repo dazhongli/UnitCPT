@@ -1,4 +1,4 @@
-from dlpkg.cpt import CPT
+from cpt import CPT
 from pathlib import Path
 import os
 import plotly.io as pio

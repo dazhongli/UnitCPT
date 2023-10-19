@@ -1,4 +1,4 @@
-from src.cpt import CPT
+from .cpt import CPT
 from pathlib import Path
 import os
 import plotly.io as pio
@@ -148,20 +148,27 @@ def plot_p_y_curve(df, rows_to_plot):
     plt.show()
     return fig
 
-def resample_cpt_data(cpt_data, z0, interval):
-    '''
-    Resample the cpt_data dataframe starting from depth z0 with a desiganated interval
-    '''
-    # Filter the dataframe by depth
-    filtered_cpt_data = cpt_data.df[cpt_data.df['SCPT_DPTH'] > z0]
-        
-    # Set the index of the dataframe to 'depth'
-    filtered_cpt_data.set_index('SCPT_DPTH', inplace=True)
-
-    # Resample the dataframe to a depth interval of 1.0m starting from depth z0
-    resampled_cpt_data = filtered_cpt_data.loc[z0:].resample(interval).asfreq()
-
-    # Reset the index of the dataframe to 'SCPT_DPTH'
-    resampled_cpt_data.reset_index(inplace=True)
-
-    return resampled_cpt_data
+def interpolate_cpt_data(df, interval):
+    new_depths = pd.Series(np.arange(int(df['SCPT_DPTH'].min()), int(df['SCPT_DPTH'].max())+1, interval))
+    col_names = df.iloc[:, 2:].columns.tolist()
+    results = []
+    for col_name in col_names:
+        col_results = []
+        for depth in new_depths:
+            if depth in df['SCPT_DPTH'].values:
+                new_value = df.set_index('SCPT_DPTH')[col_name].loc[depth]
+                col_results.append(new_value)
+            else:
+                df_sorted = df.sort_values('SCPT_DPTH')
+                idx_smaller = df_sorted['SCPT_DPTH'].searchsorted(depth, side='right') - 1
+                idx_larger = idx_smaller + 1
+                depth_smaller = df_sorted.iloc[idx_smaller]['SCPT_DPTH']
+                depth_larger = df_sorted.iloc[idx_larger]['SCPT_DPTH']
+                value_smaller = df_sorted.iloc[idx_smaller][col_name]
+                value_larger = df_sorted.iloc[idx_larger][col_name]
+                new_value = np.interp(depth, [depth_smaller, depth_larger], [value_smaller, value_larger])
+                col_results.append(new_value)
+        results.append(col_results)    
+    new_df = pd.DataFrame(dict(zip(col_names, results)))
+    new_df['SCPT_DPTH'] = new_depths
+    return new_df
