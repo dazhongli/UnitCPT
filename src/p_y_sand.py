@@ -122,7 +122,7 @@ def export_p_y_sand(df, filename):
     #df.to_excel(writer, sheet_name='Sheet 1')
     #writer.save()
 
-def plot_p_y_curve(df, rows_to_plot):
+def plot_p_y_curve(df, plot_interval):
     '''
     Plot the p-y curve for sand at different depths with specified rows to plot
     For example, rows_to_plot = [200, 800, 1600, 3200, 5600, 6400]
@@ -131,8 +131,11 @@ def plot_p_y_curve(df, rows_to_plot):
     # Create a figure and axis object
     fig, ax = plt.subplots()
 
+    # get the index of rows with the given interval
+    index_list = df.iloc[::plot_interval].index.tolist()
+
     # Plot the selected rows
-    for i in rows_to_plot:
+    for i in index_list:
         row = df.iloc[i]
         x = [row[f'y{j}'] for j in range(11)]
         y = [row[f'p{j}'] for j in range(11)]
