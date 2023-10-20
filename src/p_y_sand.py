@@ -112,6 +112,12 @@ def calc_p(y, A, pr, z, k):
     '''
     return A * pr * np.tanh(k * z / (A * pr) * y / 1000)
 
+def calc_y(y_interval, i):
+    '''
+    This function calculates the lateral soil resistance-displacement p-y relationship for a pile in sand
+    '''
+    return y_interval * i
+
 def export_p_y_sand(df, filename):
     '''
     Export p-y data to excel

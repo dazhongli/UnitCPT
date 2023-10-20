@@ -18,7 +18,10 @@ def calc_su1(su, su0, z):
     This function calculates the rate of increase of shear strength with depth in linearly increasing strength profiles, as
 determined from DSS testing for clay
     '''
-    return (su - su0) / z
+    if su <= su0:
+        return 0.001 / z
+    else: 
+        return (su - su0) / z
 
 def calc_alpha(su, sigma_v_e):
     '''
@@ -45,11 +48,16 @@ def calc_d(su0, su1, D):
     lam = su0 / (su1 * D)
     return max(16.8 - 2.3 * log10(lam), 14.5)
 
-def calc_N_p0(N1, N2, alpha, d, D, N_pd, z):
+def calc_N_p0(N_1, N_2, alpha, d, D, N_pd, z):
     '''
     This function calculates the lateral bearing capacity factor due to passive wedge for weightless soil N_p0 for clay
     '''
-    N_p0 = N1 - (1 - alpha) - (N1 - N2) * (1 - (z / (d * D))**0.6)**1.35
+    #N_p0 = N_1 - (1 - alpha) - (N_1 - N_2) * (1 - (z / (d * D))**0.6)**1.35
+    k = 1 - (z / (d * D))**0.6
+    if k>0:
+        N_p0 = N_1 - (1 - alpha) - (N_1 - N_2) * k**1.35
+    else:
+        N_p0 = N_1 - (1 - alpha)
     return min(N_p0, N_pd)
 
 def calc_N_P(N_pd, N_p0, gamma, z, su, isotropy):
@@ -127,7 +135,7 @@ def calc_y_mo(I_p, OCR, D, id_p):
             y_value = np.interp(OCR, [2, 4], [table.iloc[i]['OCR ≤ 2'], table.iloc[i]['OCR = 4']])
             y_results.append(y_value)
     elif OCR > 4 and OCR <10:
-        for i in table.iloc[:,0].size:
+        for i in range(table.iloc[:,0].size):
             y_value = np.interp(OCR, [4, 10], [table.iloc[i]['OCR = 4'], table.iloc[i]['OCR = 10']])
             y_results.append(y_value)
     else:
@@ -135,4 +143,44 @@ def calc_y_mo(I_p, OCR, D, id_p):
     
     y_mo  = [x * D for x in y_results]
 
-    return y_mo[id_p]
+    return y_mo[id_p] * 1000
+
+def identify_soil_layers(df):
+    # Initialize variables
+    prev_soil_type = None
+    layer_counts = []
+    layer_thicknesses = []
+    layer_types = []
+    layer_strengths_0 = []
+
+    # Iterate over rows in the DataFrame
+    for i, row in df.iterrows():
+        # Check if this row has a different soil type than the previous row
+        if row['soil_type'] != prev_soil_type:
+            # If this is not the first layer, record the count, thickness, soil type, and initial strength of the previous layer
+            if prev_soil_type is not None:
+                layer_counts.append(layer_count)
+                layer_thickness = df.loc[i-1, 'SCPT_DPTH'] - df.loc[i-layer_count, 'SCPT_DPTH']
+                layer_thicknesses.append(layer_thickness)
+                layer_types.append(prev_soil_type)
+                layer_strengths_0.append(df.loc[i-layer_count, 'su'])
+            # Reset the layer count and update the previous soil type
+            layer_count = 1
+            prev_soil_type = row['soil_type']
+        else:
+            # Increment the layer count if the soil type is the same as the previous row
+            layer_count += 1
+    
+    # Record the count, thickness, soil type, and initial strength of the last layer
+    layer_counts.append(layer_count)
+    layer_thickness = df['SCPT_DPTH'].max() - df.loc[len(df)-layer_count, 'SCPT_DPTH']
+    layer_thicknesses.append(layer_thickness)
+    layer_types.append(prev_soil_type)
+    layer_strengths_0.append(df.loc[len(df)-layer_count, 'su'])
+
+    # Add the 'strength_0' column to the DataFrame
+    df['su0'] = pd.Series([val for val, count in zip(layer_strengths_0, layer_counts) for i in range(count)], index=df.index)
+
+    # Append the 'strength_0' value to each row of the DataFrame
+    for i, row in df.iterrows():
+        row['su0'] = layer_strengths_0[layer_types.index(row['soil_type'])]
