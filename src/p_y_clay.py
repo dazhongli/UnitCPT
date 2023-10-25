@@ -184,3 +184,78 @@ def identify_soil_layers(df):
     # Append the 'strength_0' value to each row of the DataFrame
     for i, row in df.iterrows():
         row['su0'] = layer_strengths_0[layer_types.index(row['soil_type'])]
+
+
+def calc_h_f(p_mo, p_u, z, D):
+    '''
+    This function calculates the hybrid factor h_f at each depth and for all points p_mo/p_u on normalized monotonic p-y curves for clay
+    '''
+    z_rot = 15 * D
+    if z <= z_rot:
+        h_f = p_mo / p_u - (z / z_rot)**2
+    else:
+        h_f = p_mo / p_u - 1
+    h_f = max(h_f, -1)
+    return min(h_f, 0.99)
+
+
+def calc_N_eq(h_f, clay_type):
+    '''
+    This function calculates the number of equivalent cycles N_eq at each depth and for all points p_mo/p_u on normalized monotonic p-y curves for clay
+    '''
+    if clay_type == 'Gulf of Mexico':
+        g = 1.0
+    elif clay_type == 'North Sea soft clay':
+        g = 1.25
+    elif clay_type == 'North Sea stiff clay':
+        g = 2.5
+    return min((2 / (1 - h_f)) ** g, 25)
+
+def calc_p_y_mod(N_eq, clay_type):
+    '''
+    This function calculates the p-modifier and the y-modifier at each depth and for all points p_mo/p_u on normalized monotonic p-y curves for clay
+    '''
+    if clay_type == 'Gulf of Mexico':
+        p_mod = 1.47 - 0.14 * np.log(N_eq)
+        y_mod = 1.2 - 0.14 * np.log(N_eq)
+    elif clay_type == 'North Sea soft clay':
+        p_mod = 1.63 - 0.15 * np.log(N_eq)
+        y_mod = 1.2 - 0.17 * np.log(N_eq)
+    elif clay_type == 'North Sea stiff clay':
+        p_mod = 1.45 - 0.17 * np.log(N_eq)
+        y_mod = 1.2 - 0.17 * np.log(N_eq)
+    return p_mod, y_mod
+
+def plot_p_y_cyclic(df, plot_interval):
+    '''
+    Plot the p-y curve for sand at different depths with specified rows to plot
+    For example, rows_to_plot = [200, 800, 1600, 3200, 5600, 6400]
+    '''
+
+    # Create a figure and axis object
+    fig, ax = plt.subplots()
+
+    # get the index of rows with the given interval
+    index_list = df.iloc[::plot_interval].index.tolist()
+
+    # Plot the selected rows
+    for i in index_list:
+        row = df.iloc[i]
+        if row['soil_type'] == 'clay':
+            x = [row[f'y_cy{j}'] for j in range(11)]
+            y = [row[f'p_cy{j}'] for j in range(11)]           
+            depth = round(row['SCPT_DPTH'], 2)
+            ax.plot(x, y, '-o', label=f'Depth_cyclic: {depth}m')
+
+            x_mo = [row[f'y{j}'] for j in range(11)]
+            y_mo = [row[f'p{j}'] for j in range(11)]
+            ax.plot(x_mo, y_mo, '-o', label=f'Depth_mono: {depth}m')
+
+    # Add labels and legend
+    ax.set_xlabel('y (mm)')
+    ax.set_ylabel('p (kN/m)')
+    ax.legend()
+
+    # Show the plot
+    plt.show()
+    return fig
