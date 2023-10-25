@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from numpy import degrees, log10, pi, radians, tan, sin, cos
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 
 def determine_soil_type(ic):
     '''
@@ -134,8 +135,8 @@ def plot_p_y_curve(df, plot_interval):
     For example, rows_to_plot = [200, 800, 1600, 3200, 5600, 6400]
     '''
 
-    # Create a figure and axis object
-    fig, ax = plt.subplots()
+    # Create a figure object
+    fig = go.Figure()
 
     # get the index of rows with the given interval
     index_list = df.iloc[::plot_interval].index.tolist()
@@ -146,16 +147,14 @@ def plot_p_y_curve(df, plot_interval):
         x = [row[f'y{j}'] for j in range(11)]
         y = [row[f'p{j}'] for j in range(11)]
         depth = round(row['SCPT_DPTH'], 2)
-        ax.plot(x, y, '-o', label=f'Depth: {depth}m')
+        fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=f'Depth: {depth}m'))
 
     # Add labels and legend
-    ax.set_xlabel('y (mm)')
-    ax.set_ylabel('p (kN/m)')
-    ax.legend()
+    fig.update_layout(xaxis_title='y (mm)', yaxis_title='p (kN/m)', legend=dict(title='Depth'))
 
     # Show the plot
-    plt.show()
-    return fig
+    fig.show()
+    #return fig
 
 def interpolate_cpt_data(df, interval):
     new_depths = pd.Series(np.arange(int(df['SCPT_DPTH'].min()), int(df['SCPT_DPTH'].max())+1, interval))

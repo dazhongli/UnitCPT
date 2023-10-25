@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from numpy import degrees, log10, pi, radians, tan, sin, cos
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 
 def calc_su(qt, sigma_v, nkt):
     '''
@@ -232,8 +233,8 @@ def plot_p_y_cyclic(df, plot_interval):
     For example, rows_to_plot = [200, 800, 1600, 3200, 5600, 6400]
     '''
 
-    # Create a figure and axis object
-    fig, ax = plt.subplots()
+    # Create a figure object
+    fig = go.Figure()
 
     # get the index of rows with the given interval
     index_list = df.iloc[::plot_interval].index.tolist()
@@ -245,17 +246,16 @@ def plot_p_y_cyclic(df, plot_interval):
             x = [row[f'y_cy{j}'] for j in range(11)]
             y = [row[f'p_cy{j}'] for j in range(11)]           
             depth = round(row['SCPT_DPTH'], 2)
-            ax.plot(x, y, '-o', label=f'Depth_cyclic: {depth}m')
+            fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=f'Depth_cyclic: {depth}m'))
 
             x_mo = [row[f'y{j}'] for j in range(11)]
             y_mo = [row[f'p{j}'] for j in range(11)]
-            ax.plot(x_mo, y_mo, '-o', label=f'Depth_mono: {depth}m')
+            fig.add_trace(go.Scatter(x=x_mo, y=y_mo, mode='lines+markers', name=f'Depth_mono: {depth}m'))
 
     # Add labels and legend
-    ax.set_xlabel('y (mm)')
-    ax.set_ylabel('p (kN/m)')
-    ax.legend()
+    fig.update_layout(xaxis_title='y (mm)', yaxis_title='p (kN/m)', legend=dict(title='Depth'))
+
 
     # Show the plot
-    plt.show()
-    return fig
+    fig.show()
+    #return fig
