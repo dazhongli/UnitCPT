@@ -7,7 +7,7 @@ UnitCPT is a Python package built on top of the `Plotly Dash` framework, designe
 ## Installation
 
  ```shell
- conda create -n unitcpt python=3.9
+ conda env create -f environment.yml
  conda activate unitcpt
 
  ```

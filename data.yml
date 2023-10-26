@@ -2,7 +2,7 @@ active_project: 279400-CLP Prelimiary SI
 mapbox_token: 'pk.eyJ1IjoiZGF6aG9uZ2xpIiwiYSI6ImNrMnN3NW5lbjBqdDAzaHI2ZHVwOGd3NTkifQ.GA-xYIVfrnWyHpppuMJApQ
 
   '
-proj_path: !!python/object/apply:pathlib.WindowsPath
+proj_path: 
 - projects
 projects:
 - label: 274272-HKOLNGT
