@@ -7,6 +7,18 @@ import pandas as pd
 from numpy import degrees, log10, pi, radians, tan, sin, cos
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
+from scipy.interpolate import interp1d
+from enum import Enum
+
+class Clay_type(Enum):
+    Gulf_of_Mexico = 1
+    North_Sea_soft_clay = 2
+    North_Sea_stiff_clay = 3
+
+class Loading_direction(Enum):
+    Isotropy = 1
+    Anisotropy = 2
+
 
 def calc_su(qt, sigma_v, nkt):
     '''
@@ -76,7 +88,7 @@ def calc_N_P(N_pd, N_p0, gamma, z, su, isotropy):
     if z == 0:
         N_P0 = N_P
 
-    if isotropy != 'true':
+    if isotropy == Loading_direction.Anisotropy:
         C_W = 1 + (0.9 - 1) * (N_pd - N_P) / (N_pd - N_P0)
         N_P = min(C_W * N_p0 + ((gamma - 10) * z) / su, N_pd)
     
@@ -126,7 +138,6 @@ def calc_y_mo(I_p, OCR, D, id_p):
     else:
         table = table_I_p_below_30
 
-    # determine the column to use based on the OCR value
     y_results = []
     if OCR <= 2:
         y_results = table['OCR ≤ 2']
@@ -204,11 +215,11 @@ def calc_N_eq(h_f, clay_type):
     '''
     This function calculates the number of equivalent cycles N_eq at each depth and for all points p_mo/p_u on normalized monotonic p-y curves for clay
     '''
-    if clay_type == 'Gulf of Mexico':
+    if clay_type == Clay_type.Gulf_of_Mexico:
         g = 1.0
-    elif clay_type == 'North Sea soft clay':
+    elif clay_type == Clay_type.North_Sea_soft_clay:
         g = 1.25
-    elif clay_type == 'North Sea stiff clay':
+    elif clay_type == Clay_type.North_Sea_stiff_clay:
         g = 2.5
     return min((2 / (1 - h_f)) ** g, 25)
 
@@ -216,13 +227,13 @@ def calc_p_y_mod(N_eq, clay_type):
     '''
     This function calculates the p-modifier and the y-modifier at each depth and for all points p_mo/p_u on normalized monotonic p-y curves for clay
     '''
-    if clay_type == 'Gulf of Mexico':
+    if clay_type == Clay_type.Gulf_of_Mexico:
         p_mod = 1.47 - 0.14 * np.log(N_eq)
         y_mod = 1.2 - 0.14 * np.log(N_eq)
-    elif clay_type == 'North Sea soft clay':
+    elif clay_type == Clay_type.North_Sea_soft_clay:
         p_mod = 1.63 - 0.15 * np.log(N_eq)
         y_mod = 1.2 - 0.17 * np.log(N_eq)
-    elif clay_type == 'North Sea stiff clay':
+    elif clay_type == Clay_type.North_Sea_stiff_clay:
         p_mod = 1.45 - 0.17 * np.log(N_eq)
         y_mod = 1.2 - 0.17 * np.log(N_eq)
     return p_mod, y_mod
@@ -259,3 +270,25 @@ def plot_p_y_cyclic(df, plot_interval):
     # Show the plot
     fig.show()
     #return fig
+
+
+def shaft_friction_unified_clay(pile, z,  qt, Fr, Qt1):
+    '''
+    This returns unit shaft friction of a pile at clay layer using unified CPT method
+    '''
+    Iz1 = Qt1 - 12 * np.exp(-1.4 * Fr)
+    if Iz1 > 0:
+        Fst = 1.0
+    else:
+        Fst = 0.5
+    
+    R_star = np.sqrt((pile.dia_out/2)**2 - (pile.dia_inner/2)**2)
+    qt = qt*1000  # qc in MPa
+    h = pile.penetration-z
+
+    return 0.007 * Fst * qt * np.max([h/R_star, 1])**(-0.25)
+
+def base_Qb_unified_clay(pile, qp_average):
+    Ar = pile.disp_ratio
+    qp_average = 1000*qp_average
+    return (0.2 + 0.6 * Ar) * qp_average * pile.gross_area
