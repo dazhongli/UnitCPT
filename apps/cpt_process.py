@@ -169,7 +169,7 @@ def show_CPT_location(n_clicks):
         gdf=gdf, hoverinfo='CPT', fig=fig, instrument_type='CPT', mode='markers+text')
     # fig = px.scatter_mapbox(gdf, lat='Lon', lon='Lat',
     #                         height=500, width=900, zoom=11)
-    fig.update_layout(width=1200, margin=dict(l=0, r=0, t=0, b=0))
+    fig.update_layout(width=1200,height=300, margin=dict(l=0, r=0, t=0, b=0))
     return fig
 
 
@@ -212,6 +212,7 @@ def show_CPT(clickData):
         cpt_plot = CPT()
         cpt_plot.df = df
         fig = cpt_plot.plot_SBTn_full(SI_name)
+        fig.update_layout(width=1200,height=600)
         return [fig, options, files_ASCII[0].stem]
 
     except Exception as e:

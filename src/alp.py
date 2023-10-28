@@ -1,7 +1,5 @@
 import win32com.client
 #import geoplot as plt
-from pathlib import Path
-from tqdm import tqdm
 import numpy as np
 import os
 import pandas as pd
@@ -20,7 +18,7 @@ class ALP:
         
     def _close_alp(self):
         '''
-        close the instance of the running alp, this will cause error when openning or start a new project
+        close the instance of the running alp, this will cause error when opening or start a new project
         '''
         for proc in psutil.process_iter():
             try:
@@ -30,7 +28,7 @@ class ALP:
                 if process_info['name'] == 'alp.exe':
                     psutil.Process(process_info['pid']).terminate()
                     logger.debug(f"Terminated - {process_info['name']} Pid-{process_info['pid']}")
-                # Check if the process name matches the target applicatio
+                # Check if the process name matches the target application
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
     def open(self, filename):
@@ -41,7 +39,7 @@ class ALP:
         if os.path.exists(filename):   
             try:
                 self.proj.Open(filename)
-                logger.debug(f'Sucessfully started {filename}')
+                logger.debug(f'Successfully started {filename}')
             except Exception as e:
                 print(e)
             self.n_nodes = self.proj.GetNumNodes()
@@ -56,6 +54,7 @@ class ALP:
         '''
         self.df_disp = pd.DataFrame(columns=['node_ID','Level','Disp','BM'])
         node_disp =[]
+        self.n_nodes = self.proj.GetNumNodes()
         for i in range(1,self.n_nodes):
             self.df_disp.loc[i,'node_ID'] = i
             i_disp = self.proj.GetNodeDisp(i)
@@ -75,12 +74,17 @@ class ALP:
         self.proj.setSubTitle(subtitle)
         self.proj.setNotes(Notes)
         logger.debug(f"Started New file {filename}")
+
     def save(self):
         self.proj.Save()
         logger.debug('File saved successfully')
+    
+    def save_as(self, filename):
+        self.proj.SaveAs(filename)
+        logger.debug(f'{filename} saved successfully')
         
     def set_section(self, section_id, section_string, input_type, effective_width, EI):
-        self.proj.SetSection(section_id, section_string, section_type, diameter, EI)
+        self.proj.SetSection(section_id, section_string, input_type, effective_width, EI)
 
     def set_node_load_displacement(self, node_ID, force, moment, displacement):
         '''
@@ -88,9 +92,8 @@ class ALP:
         @param:
         node_ID: 
         force: shear force at the node
-        moment: bending moement at the node
-        displacement: displacement at the node
-        '''
+        moment: bending moment at the node
+        displacement: the soil displacement at the specified node         '''
 
         self.proj.SetNodeLoadDisp(node_ID, force, moment, displacement)
 
@@ -104,14 +107,13 @@ class ALP:
 
     def get_node_BM(self,node_ID, is_below=True):
         '''
-        Return the bending moement at a node 
+        Return the bending moment at a node 
         @param:
-
         node_ID:
         is_below:`True` or `False`
         '''
         return self.proj.GetNodeBM(node_ID, is_below)
-    def plot_force_Diplacement(self):
+    def plot_force_Displacement(self):
         '''
         plot the displacement and bending moment profile along the pile
         return: plotly figure object

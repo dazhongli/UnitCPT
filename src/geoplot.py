@@ -63,6 +63,11 @@ class GEOPlot():
                     font=dict(size=4)
                 )]
         fig.update_layout(margin=dict(l=20, r=20, t=20, b=20))
+        for row in range(rows):
+            for col in range(cols):
+                fig.update_xaxes(showgrid=True, row=row+1, col=col+1)
+                fig.update_yaxes(showgrid=True, row=row+1, col=col+1)
+
 
         return fig
 

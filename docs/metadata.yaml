@@ -4,8 +4,7 @@ author: [Dazhong Li]
 fontsize: 12pt
 colorlinks: false
 geometry: "left=3cm,right=3cm,top=1.8cm,bottom=1.8cm"
-toc: true
 lof: false
 linestretch: 1.5
-papersize: a4
+papersize: a3
 ---

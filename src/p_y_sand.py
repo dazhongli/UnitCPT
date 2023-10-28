@@ -5,7 +5,13 @@ import plotly.io as pio
 import numpy as np
 import pandas as pd
 from numpy import degrees, log10, pi, radians, tan, sin, cos
+from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+from enum import Enum
+
+class SoilType(Enum):
+    CLAY =1
+    SAND =2
 
 def determine_soil_type(ic):
     '''
@@ -157,7 +163,7 @@ def plot_p_y_curve(df, plot_interval):
     plt.show()
     return fig
 
-def interpolate_cpt_data(df, interval):
+def interpolate_cpt_data_emma(df, interval):
     new_depths = pd.Series(np.arange(int(df['SCPT_DPTH'].min()), int(df['SCPT_DPTH'].max())+1, interval))
     col_names = df.iloc[:, 2:].columns.tolist()
     results = []
@@ -181,3 +187,13 @@ def interpolate_cpt_data(df, interval):
     new_df = pd.DataFrame(dict(zip(col_names, results)))
     new_df['SCPT_DPTH'] = new_depths
     return new_df
+
+def interpolate_cpt_data_dl(df, interval):
+    resampled_depths = pd.Series(np.arange(int(df['SCPT_DPTH'].min()), int(df['SCPT_DPTH'].max())+1, interval))
+    col_names = df.iloc[:, 2:].columns.tolist()
+    df_resampled = pd.DataFrame()
+    for col_name in col_names:
+        func_name = interp1d(df.SCPT_DPTH,df[col_name],kind='linear')
+        df_resampled[col_name] = func_name[resampled_depths]
+    return df_resampled
+

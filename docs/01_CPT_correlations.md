@@ -7,11 +7,10 @@ titlepage: true
 colorlinks: true
 geometry: "left=2cm,right=2cm,top=2.5cm,bottom=3.0cm"
 table-use-row-colors: false
-toc: true
 lof: true
 linestretch: 1.0
 papersize: a4
-bibliography: "bib.bib"
+bibliography: "CPT.bib"
 csl: "cambridge-university-press-author-date.csl"
 book: false
 date: 2023

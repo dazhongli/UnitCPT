@@ -1,5 +1,5 @@
 ---
-bibliography: [bib.bib]
+bibliography: [CPT.bib]
 ---
 
 # P-y curves for monotonic actions

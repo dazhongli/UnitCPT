@@ -1,0 +1,657 @@
+<!doctype html>
+<html >
+<head>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!--[if lt IE 9]>
+                <script src="http://css3-mediaqueries-js.googlecode.com/svn/trunk/css3-mediaqueries.js"></script>
+        <![endif]-->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+
+    <link href="https://fonts.googleapis.com/css?family=Domine|Montserrat" rel="stylesheet"> 
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <!-- <link rel="stylesheet" type="text/css" href="template.css" /> -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/template.css" />
+
+    <link href="https://vjs.zencdn.net/5.4.4/video-js.css" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+    <!-- <script type='text/javascript' src='menu/js/jquery.cookie.js'></script> -->
+    <!-- <script type='text/javascript' src='menu/js/jquery.hoverIntent.minified.js'></script> -->
+    <!-- <script type='text/javascript' src='menu/js/jquery.dcjqaccordion.2.7.min.js'></script> -->
+    <!-- <link href="menu/css/skins/blue.css" rel="stylesheet" type="text/css" /> -->
+    <!-- <link href="menu/css/skins/graphite.css" rel="stylesheet" type="text/css" /> -->
+    <!-- <link href="menu/css/skins/grey.css" rel="stylesheet" type="text/css" /> -->
+    <!-- <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> -->
+    <!-- <script src="script.js"></script> -->
+    <!-- <script src="jquery.sticky-kit.js "></script> -->
+    <script type='text/javascript' src='https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/menu/js/jquery.cookie.js'></script>
+    <script type='text/javascript' src='https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/menu/js/jquery.hoverIntent.minified.js'></script>
+    <script type='text/javascript' src='https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/menu/js/jquery.dcjqaccordion.2.7.min.js'></script>
+
+    <link href="https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/menu/css/skins/blue.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/menu/css/skins/graphite.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/menu/css/skins/grey.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/gh/ryangrose/easy-pandoc-templates@948e28e5/css/elegant_bootstrap.css" rel="stylesheet" type="text/css" />
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+    <script src="https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/script.js"></script>
+  
+    <script src="https://cdn.jsdelivr.net/gh/diversen/pandoc-bootstrap-adaptive-template@959c3622/jquery.sticky-kit.js"></script>
+    <meta name="generator" content="pandoc" />
+  <meta name="author" content="Dazhong Li" />
+  <meta name="date" content="2023-01-01" />
+  <title>Unified CPT Method for Foundation Design</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">body { font-family: Domine, Georgia, Palatino, 'Palatino Linotype', Times, 'Times New Roman', serif} h1, h2, h3, h4, h5, h6 { font-family: Montserrat, sans }</style>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+
+    
+    <div class="navbar navbar-static-top navbar-expand-sm px-0 pt-0">
+    <div class="navbar-inner container-fluid">
+      <div class="container">
+        <span class="doc-title">Unified CPT Method for Foundation
+Design</span>
+        <ul class="nav pull-right doc-info">
+                    <li><p class="navbar-text">Dazhong Li</p></li>
+                              <li><p class="navbar-text">2023</p></li>
+                  </ul>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+      <div class="row">
+            <div id="TOC" class="col-sm-7 col-lg-3">
+        <div class="well toc">
+
+        <ul>
+        <li><a href="#cpt-document" id="toc-cpt-document"><span
+        class="toc-section-number">1</span> CPT Document</a>
+        <ul>
+        <li><a href="#cpt-correlation" id="toc-cpt-correlation"><span
+        class="toc-section-number">1.1</span> CPT Correlation</a></li>
+        <li><a href="#basic-engineering-properties"
+        id="toc-basic-engineering-properties"><span
+        class="toc-section-number">1.2</span> Basic Engineering
+        Properties</a>
+        <ul>
+        <li><a href="#unit-weight" id="toc-unit-weight"><span
+        class="toc-section-number">1.2.1</span> Unit Weight</a></li>
+        <li><a href="#relative-density" id="toc-relative-density"><span
+        class="toc-section-number">1.2.2</span> Relative
+        Density</a></li>
+        <li><a href="#friction-angle" id="toc-friction-angle"><span
+        class="toc-section-number">1.2.3</span> Friction Angle</a></li>
+        <li><a href="#small-strain-stiffness-g_0"
+        id="toc-small-strain-stiffness-g_0"><span
+        class="toc-section-number">1.2.4</span> Small Strain Stiffness
+        <span class="math inline">\(G_0\)</span></a></li>
+        </ul></li>
+        <li><a href="#liquefaction-assessment"
+        id="toc-liquefaction-assessment"><span
+        class="toc-section-number">1.3</span> Liquefaction
+        Assessment</a></li>
+        <li><a href="#dissipation-tests"
+        id="toc-dissipation-tests"><span
+        class="toc-section-number">1.4</span> Dissipation Tests</a></li>
+        <li><a href="#to-dos" id="toc-to-dos"><span
+        class="toc-section-number">1.5</span> To-dos</a></li>
+        <li><a href="#unified-cpt-method"
+        id="toc-unified-cpt-method"><span
+        class="toc-section-number">1.6</span> Unified CPT
+        Method</a></li>
+        <li><a href="#pile-capacity-within-clay"
+        id="toc-pile-capacity-within-clay"><span
+        class="toc-section-number">1.7</span> Pile Capacity within
+        Clay</a>
+        <ul>
+        <li><a href="#alpha-approach" id="toc-alpha-approach"><span
+        class="toc-section-number">1.7.1</span> <span
+        class="math inline">\(\alpha\)</span> Approach</a></li>
+        </ul></li>
+        <li><a href="#pile-capacity-within-sand"
+        id="toc-pile-capacity-within-sand"><span
+        class="toc-section-number">1.8</span> Pile Capacity within
+        Sand</a>
+        <ul>
+        <li><a href="#skin-friction" id="toc-skin-friction"><span
+        class="toc-section-number">1.8.1</span> Skin Friction</a></li>
+        <li><a href="#base-resistance" id="toc-base-resistance"><span
+        class="toc-section-number">1.8.2</span> Base Resistance</a></li>
+        <li><a
+        href="#skin-friction-and-end-bearing-for-driven-piles-in-intermediate-soils"
+        id="toc-skin-friction-and-end-bearing-for-driven-piles-in-intermediate-soils"><span
+        class="toc-section-number">1.8.3</span> Skin Friction and End
+        Bearing for Driven Piles in Intermediate Soils</a></li>
+        </ul></li>
+        </ul></li>
+        <li><a href="#p-y-curves-for-monotonic-actions"
+        id="toc-p-y-curves-for-monotonic-actions"><span
+        class="toc-section-number">2</span> P-y curves for monotonic
+        actions</a>
+        <ul>
+        <li><a href="#p-y-curve-for-cyclic-actions"
+        id="toc-p-y-curve-for-cyclic-actions"><span
+        class="toc-section-number">2.1</span> P-y curve for cyclic
+        actions</a></li>
+        <li><a href="#p-y-curves-for-fatigue-action"
+        id="toc-p-y-curves-for-fatigue-action"><span
+        class="toc-section-number">2.2</span> p-y curves for fatigue
+        action</a></li>
+        <li><a href="#p-y-curves-for-earthquake"
+        id="toc-p-y-curves-for-earthquake"><span
+        class="toc-section-number">2.3</span> p-y curves for
+        earthquake</a></li>
+        <li><a href="#lateral-capacity-for-sand"
+        id="toc-lateral-capacity-for-sand"><span
+        class="toc-section-number">2.4</span> Lateral Capacity for
+        sand</a></li>
+        </ul></li>
+        </ul>
+
+        </div>
+      </div>
+            <div class="col-9">
+
+      
+      <h1 data-number="1" id="cpt-document"><span
+class="header-section-number">1</span> CPT Document</h1>
+<h2 data-number="1.1" id="cpt-correlation"><span
+class="header-section-number">1.1</span> CPT Correlation</h2>
+<p>This document presents the correlation implemented in the current
+code.</p>
+<h2 data-number="1.2" id="basic-engineering-properties"><span
+class="header-section-number">1.2</span> Basic Engineering
+Properties</h2>
+<h3 data-number="1.2.1" id="unit-weight"><span
+class="header-section-number">1.2.1</span> Unit Weight</h3>
+<p><span class="citation" data-cites="robertson2010soil">(<a
+href="#ref-robertson2010soil"
+role="doc-biblioref"><strong>robertson2010soil?</strong></a>)</span>,
+refer to say</p>
+<p><span class="math display">\[\begin{equation}
+\gamma/\gamma_w = 0.27[\log(R_f)] + 0.36 [\log(q_t/p_a)] + 1.236
+\end{equation}\]</span></p>
+<ul>
+<li><span class="math inline">\(\gamma\)</span> = unit weight of
+soil</li>
+<li><span class="math inline">\(\gamma_w\)</span> = unit weight of
+water</li>
+<li><span class="math inline">\(R_f\)</span> = friction ratio, the ratio
+of <span class="math inline">\(f_s\)</span> over <span
+class="math inline">\(q_t\)</span>, i.e, <span
+class="math inline">\(\frac{f_s}{q_t} \times \text{100\%}\)</span></li>
+<li><span class="math inline">\(q_t\)</span> = corrected cone
+resistance</li>
+<li><span class="math inline">\(P_a\)</span> = atmospheric pressure</li>
+</ul>
+<h3 data-number="1.2.2" id="relative-density"><span
+class="header-section-number">1.2.2</span> Relative Density</h3>
+<blockquote>
+<p>Jamiolkowski (2003), Table 5 on Page 9.</p>
+</blockquote>
+<p>The original form of relative density can be expressed as Eq.(<span
+class="math inline">\(\ref{eq_fz}\)</span>).</p>
+<p><span class="math display">\[\begin{equation} {\label{eq_fz}}
+    D_R = \frac{1}{C_2}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+D_r = \frac{1}{3.10}\cdot
+\ln\bigg[\frac{q_t/P_a}{17.68\cdot(\sigma_{v0}&#39;/P_a))^{0.5}}\bigg]
+\end{equation}\]</span></p>
+<h3 data-number="1.2.3" id="friction-angle"><span
+class="header-section-number">1.2.3</span> Friction Angle</h3>
+<p><span class="math display">\[\begin{equation}
+\varphi_p&#39;=
+17.6+11\cdot\log_{10}\bigg[\frac{q_t/P_a}{(\sigma_{v0}&#39;/P_a)^{0.5}}\bigg]
+\end{equation}\]</span></p>
+<h3 data-number="1.2.4" id="small-strain-stiffness-g_0"><span
+class="header-section-number">1.2.4</span> Small Strain Stiffness <span
+class="math inline">\(G_0\)</span></h3>
+<p><span class="math display">\[\begin{equation}
+G_0 = 50\cdot \sigma_{atm}\big[(q_t-\sigma_{v0}/\sigma_{atm}\big]^{m*}
+\end{equation}\]</span></p>
+<p>where:</p>
+<p><span class="math display">\[\begin{equation}
+    m^*  = \begin{cases}
+        0.6 &amp; \text{sand} \\
+        0.8 &amp; \text{silt} \\
+        1.0 &amp; \text{clay}
+    \end{cases}
+\end{equation}\]</span></p>
+<h2 data-number="1.3" id="liquefaction-assessment"><span
+class="header-section-number">1.3</span> Liquefaction Assessment</h2>
+<h2 data-number="1.4" id="dissipation-tests"><span
+class="header-section-number">1.4</span> Dissipation Tests</h2>
+<h2 data-number="1.5" id="to-dos"><span
+class="header-section-number">1.5</span> To-dos</h2>
+
+<h2 data-number="1.6" id="unified-cpt-method"><span
+class="header-section-number">1.6</span> Unified CPT Method</h2>
+<p>Pile capacity can be calculated as:</p>
+<p><span class="math display">\[\begin{equation}
+Q_{r,c} = Q_{f,c} - Q_p = f(z)\cdot A_s + q_{base} \cdot A_{pile}
+\end{equation}\]</span></p>
+<h2 data-number="1.7" id="pile-capacity-within-clay"><span
+class="header-section-number">1.7</span> Pile Capacity within Clay</h2>
+<h3 data-number="1.7.1" id="alpha-approach"><span
+class="header-section-number">1.7.1</span> <span
+class="math inline">\(\alpha\)</span> Approach</h3>
+<p>This method will require the input of the undrained shear strength
+<span class="math inline">\(s_u\)</span>. To directly link this</p>
+<p><span class="math display">\[\begin{equation}
+f(z) = \alpha\cdot s_u(z)
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+\alpha = \begin{cases}
+0.5\cdot \psi^{-0.5} &amp; \psi&lt;=1.0 \\
+0.5\cdot \psi^{-0.25} &amp; \psi&gt;1.0 \\
+\end{cases}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+\psi = \frac{s_u}{\sigma_{v0}&#39;(z)}
+\end{equation}\]</span></p>
+<h2 data-number="1.8" id="pile-capacity-within-sand"><span
+class="header-section-number">1.8</span> Pile Capacity within Sand</h2>
+<h3 data-number="1.8.1" id="skin-friction"><span
+class="header-section-number">1.8.1</span> Skin Friction</h3>
+<p>Skin friction within the sand can be determined using Eq.(<span
+class="math inline">\(\ref{eq_fz_sand}\)</span>). The method implemented
+is presented in <strong>Section 8.1.4, page 46</strong> of
+ISO19901-4.</p>
+<p><span class="math display">\[\begin{equation} {\label{eq_fz_sand}}
+f(z) = f_L(\sigma_{rc}&#39;+\Delta \sigma_{rd}&#39;)\cdot
+\mathrm{tan}(29^0)
+\end{equation}\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(f_L\)</span> is the loading coefficient,
+<strong>0.75</strong> for tension actions and 1.0 for compression
+actions.</li>
+<li>29 is the angle of interface friction used for hte calibration of
+the method, nothing that factors, such as paint, coating or mill-scale
+varnish, can negatively affect the interface.</li>
+<li><span class="math inline">\(\sigma_{rc}&#39;\)</span> is to the
+radial confined stress, which can be correlated to the CPT cone tip
+resistance by Eq.(<span
+class="math inline">\(\ref{eq_rc}\)</span>).</li>
+</ul>
+<p><span class="math display">\[\begin{equation} {\label{eq_rc}}
+\sigma_{rc}&#39;= \frac{q_c}{44}\cdot A_{re}^{0.3}\cdot
+\big[\mathrm{max}(1,\frac{h}{D})\big]^{-0.4}
+\end{equation}\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(\sigma_{rc}&#39;\)</span> is the
+horizontal effective stress acting on a driven pile at depth <span
+class="math inline">\(z\)</span>, about <strong>two weeks</strong> after
+driving.</li>
+<li><span class="math inline">\(\sigma_v&#39;\)</span> is the vertical
+effective stress ast a depth <span
+class="math inline">\(z\)</span>.</li>
+<li><span class="math inline">\(A_{re}\)</span> is the effective area
+ratio, defined in <span class="math inline">\(\ref{eq_Are}\)</span>, is
+a measure of soil displacement induced by the driven pile and expressed
+as a fraction of hte soil displacement induced by a close-ended pile
+(for which <span class="math inline">\(A_{re}=1\)</span>).</li>
+</ul>
+<p><span class="math display">\[\begin{equation}
+    \Delta\sigma_{rd}&#39; =
+\frac{q_c}{10}\cdot\bigg(\frac{q_c}{\sigma_v&#39;}\bigg)^{-0.33}\cdot\frac{d_{ref}}{D}
+\end{equation}\]</span></p>
+<p>where <span class="math inline">\(D\)</span> is the pile outer
+diameters, <span class="math inline">\(d_{ref}\)</span></p>
+<p><span class="math display">\[\begin{equation} {\label{eq_Are}}
+A_{re} = 1-PLR\cdot \bigg(\frac{D_i}{D}\bigg)^2
+\end{equation}\]</span></p>
+<p>where</p>
+<ul>
+<li><em>PLR</em> is the Plug Length Ratio, which has a maximum value of
+1.0, defined as the ratio of the plug length (<span
+class="math inline">\(L_p\)</span>) to the pile embedment (<span
+class="math inline">\(L\)</span>), and for which the absence of
+measurement, <em>PLR</em> shall be taken as 1.0 for typical offshore
+piles.</li>
+<li><span class="math inline">\(\Delta \sigma_{rd}&#39;\)</span> is the
+change in horizontal stress acting at a depth of <span
+class="math inline">\(z\)</span>, arising due to interface shear
+dilation when the pile is loaded.</li>
+<li><span class="math inline">\(d_ref\)</span> = 0.0356m</li>
+<li>h is the distance above pile tip at which <span
+class="math inline">\(f(z)\)</span> acts (=<span
+class="math inline">\(L-Z\)</span>)</li>
+</ul>
+<h3 data-number="1.8.2" id="base-resistance"><span
+class="header-section-number">1.8.2</span> Base Resistance</h3>
+<p>When the pile has a length to diameter ratio greater than 5, i.e,
+<span class="math inline">\(L/D &gt;5.0\)</span>, the base resistance
+<span class="math inline">\(Q_b\)</span> can be calculated in a similar
+fashion as closed pile</p>
+<p><span class="math display">\[\begin{equation}
+Q_b = \begin{cases}
+q\cdot A_{pile} &amp; L/D &gt;5  (\text{Plugged Case}) \\
+q_{c,avg}\cdot A_{re}\cdot A_{pile} &amp; \text{otherwise}
+(\text{unplugged Case})
+\end{cases}
+\end{equation}\]</span></p>
+<p>Note that <span class="math inline">\(A_{pile}\)</span> is the gross
+area of the tubular piles. <span class="math inline">\(q\)</span> is the
+maximum bearing pressure at the based of the plugged pile that can be
+calculated using Eq.(<span
+class="math inline">\(\ref{eq_base}\)</span>). As the maximum value of
+<span class="math inline">\(A_{re}\)</span> would be 1.0, the maximum
+stress allowed would be 0.5 average cone resistance.</p>
+<p>In case of the unplugged case, i.e., <span class="math inline">\(L/D
+&lt;5.0\)</span>, this will be the case for large diameter suction
+bucket. Assuming <span class="math inline">\(PLR\)</span> is taken as
+1.0 for normal offshore piles, the unplugged case will equal to the
+<span class="math inline">\(q_{avg} * A_{annulus}\)</span>.</p>
+<p>Base resistance can be calculated as Eq.(<span
+class="math inline">\(\ref{eq_base}\)</span>).</p>
+<p><span class="math display">\[\begin{equation}{\label{eq_base}}
+q = [0.12+0.38\cdot A_{re}]\cdot q_{c,avg}
+\end{equation}\]</span></p>
+<p>When</p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(A_{re}\)</span> is defined in Eq.(<span
+class="math inline">\(\ref{eq_Are}\)</span>).</li>
+<li><span class="math inline">\(q_p\)</span> can normally be adopted as
+the average <span class="math inline">\(q_c\)</span> below and above the
+tip level as Eq.(<span class="math inline">\(\ref{eq_qp}\)</span>),
+however,</li>
+</ul>
+<blockquote>
+<p>lower <span class="math inline">\(q_p\)</span> value shall be adopted
+where spatial variability in the cone resistance indicate potential
+design sensitivity<span class="citation" data-cites="ISO19901_4">(<a
+href="#ref-ISO19901_4" role="doc-biblioref">ISO/DIS 19901-4:2022(E) 2022
+p. 44</a>)</span>.</p>
+</blockquote>
+<p><span class="math display">\[\begin{equation}{\label{eq_qp}}
+q_{c,avg} = \frac{1}{3D}\int_{-1.5D}^{1.5D}q_c \cdot dz
+\end{equation}\]</span></p>
+<blockquote>
+<p><span class="citation" data-cites="ISO19901_4">ISO/DIS
+19901-4:2022(E) (<a href="#ref-ISO19901_4"
+role="doc-biblioref">2022</a>)</span>,p.44. The method does not directly
+apply to <strong>Gravel</strong>, pile capacity within Gravel may be
+overpredicted, including the method proposed in the main text</p>
+</blockquote>
+<h3 data-number="1.8.3"
+id="skin-friction-and-end-bearing-for-driven-piles-in-intermediate-soils"><span
+class="header-section-number">1.8.3</span> Skin Friction and End Bearing
+for Driven Piles in Intermediate Soils</h3>
+<p>In intermediate soils, CPT would be partially drained. Neither sand
+or clay method can produce satisfactory results (<span class="citation"
+data-cites="ISO19901_4">(<a href="#ref-ISO19901_4"
+role="doc-biblioref">ISO/DIS 19901-4:2022(E) 2022 p. 45</a>)</span>) -
+Higher shaft resistance when soils are assumed to be
+<strong>Clay</strong> than <strong>Sand</strong> - Could lead to
+significantly over-predicted axial capacity compared with offshore load
+tests - In the absence of more definitive criteria, may consider the
+minimum of the capacity based on Clay or Sand</p>
+<h1 data-number="2" id="p-y-curves-for-monotonic-actions"><span
+class="header-section-number">2</span> P-y curves for monotonic
+actions</h1>
+<p>This section presents the derivation of the <code>p-y</code> curves
+using <span class="citation" data-cites="ISO19901_4">ISO/DIS
+19901-4:2022(E) (<a href="#ref-ISO19901_4"
+role="doc-biblioref">2022</a>)</span>. The origin of this update was not
+clearly documented in the code. ## Clay</p>
+<p><span class="math display">\[\begin{equation}
+p_u = N_p \cdot s_u  \cdot D
+\end{equation}\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(N_p = N_{p0}+ \frac{\gamma&#39;
+z}{s_u}\le N_{pd}\)</span></li>
+<li><span class="math inline">\(N_p = 2 N_{p0} \le N_{pd}\)</span></li>
+</ul>
+<p><span class="math display">\[\begin{equation}
+N_p = \begin{cases}
+   N_{p0} + \frac{\gamma&#39; z}{s_u} \le N_{pd} &amp; \text{if gapping
+is assumed} \\
+   2 \ N_{p0} \le N_{pd} &amp; \text{if no gapping is assumed}
+\end{cases}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+N_{p0} = N_1 -(1-\alpha_{ave}) - (N_1-N_2) \bigg[1-\bigg(\frac{z}{d\cdot
+D}\bigg)^{0.6}\bigg]^{1.35}
+\end{equation}\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(N_1=12\)</span></li>
+<li><span class="math inline">\(N_2 = 3.22\)</span></li>
+<li><span class="math inline">\(d = 16.8 - 2.3\log_10{(\lambda)}\ge
+14.5\)</span></li>
+<li><span class="math inline">\(\lambda = s_{u0} / (s_{u1}
+D)\)</span></li>
+<li><span class="math inline">\(\alpha_{ave}\)</span> = the average
+<span class="math inline">\(\alpha\)</span> over a depth of 20m pile
+diameter</li>
+<li><span class="math inline">\(D\)</span> = pile diameter</li>
+<li><span class="math inline">\(z\)</span> = depth below
+<em>original</em> seafloor</li>
+</ul>
+<blockquote>
+<p>Note: The is refer to the <strong>DSS strength </strong> For normally
+consolidated condition and <span class="math inline">\(s_u &gt;
+15kPa\)</span> for top 10m, <strong>no gap</strong></p>
+</blockquote>
+<p>For the wedged failure, i.e., <span class="math inline">\(N_p &lt;
+N_{pd}\)</span>, <em>triaxial extension</em> should be used instead of
+<em>DSS</em> strength.</p>
+<p><span class="math display">\[\begin{equation}
+N_{pcor} = c_w N_{p0} + \frac{\gamma&#39; z }{s_u} \le N_{pd}
+\end{equation}\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\begin{equation}
+c_w = 1+ \bigg(\frac{s_{uTE}}{s_{uDSS}} -1 \bigg) \ \frac{N_{pd}-
+N_p}{N_{pd}-N_{p|z=0}}
+\end{equation}\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(\frac{s_{uTE}}{S_{uDSS}}=0.9\)</span>
+based on <span class="citation" data-cites="ISO19901_4">ISO/DIS
+19901-4:2022(E) (<a href="#ref-ISO19901_4"
+role="doc-biblioref">2022</a>)</span>,pp.52</li>
+</ul>
+<table>
+<caption>Normalised p-y curves for monotonic actions in clay <span
+class="math inline">\(I_P\)</span>&gt;30% </caption>
+<thead>
+<tr class="header">
+<th style="text-align: center;">p/pu</th>
+<th style="text-align: right;">OCR&lt;=2</th>
+<th style="text-align: right;">OCR=4</th>
+<th style="text-align: right;">OCR=10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.05</td>
+<td style="text-align: right;">0.0003</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">0.0005</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.2</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">0.005</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.3</td>
+<td style="text-align: right;">0.0053</td>
+<td style="text-align: right;">0.008</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.4</td>
+<td style="text-align: right;">0.009</td>
+<td style="text-align: right;">0.015</td>
+<td style="text-align: right;">0.021</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.5</td>
+<td style="text-align: right;">0.014</td>
+<td style="text-align: right;">0.024</td>
+<td style="text-align: right;">0.034</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.6</td>
+<td style="text-align: right;">0.022</td>
+<td style="text-align: right;">0.036</td>
+<td style="text-align: right;">0.052</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.7</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.055</td>
+<td style="text-align: right;">0.078</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.8</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.084</td>
+<td style="text-align: right;">0.12</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.9</td>
+<td style="text-align: right;">0.082</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">0.19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.975</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">0.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1.0</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">0.3</td>
+<td style="text-align: right;">0.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1.0</td>
+<td style="text-align: right;"><span
+class="math inline">\(\infty\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(\infty\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(\infty\)</span></td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="2.1" id="p-y-curve-for-cyclic-actions"><span
+class="header-section-number">2.1</span> P-y curve for cyclic
+actions</h2>
+<p><span class="math display">\[\begin{equation}
+\begin{matrix}
+p_{cy} = p_{mod} \cdot p_{mo} \\
+y_{cy} = y_{mod} \cdot y_{mo}
+\end{matrix}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+h_f = \begin{cases}
+\frac{p_{mo}}{p_u} - \bigg(\frac{z}{z_{rot}}\bigg)^2 &amp; \text{if $z
+\le z_{rot}$} \\
+\frac{p_{mo}}{p_u} -1 &amp; \text{$z&gt;z_{rot}$}
+\end{cases}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+N_{eq}  = \bigg( \frac{2}{1-h_f}\bigg)^g \le 25
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+g = \begin{cases}
+1.0 &amp; \text{Gulf of Mexico Condition} \\
+1.25 &amp; \text{North Sea Soft Clay Condition}\\
+2.5 &amp; \text{North Sea stiff Clay condition}
+\end{cases}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+p_{mod} = \begin{cases}
+1.47 - 0.14\cdot \ln{N_{eq}} &amp; \text{Gulf of Mexico} \\
+1.63 - 0.15\cdot \ln{N_{eq}} &amp; \text{North Sea soft Clay} \\
+1.45 - 0.17\cdot \ln{N_{eq}} &amp; \text{North Sea stiff Clay}
+\end{cases}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+y_{mod} = \begin{cases}
+1.2 - 0.14\cdot \ln{N_{eq}} &amp; \text{Gulf of Mexico} \\
+1.2 - 0.17\cdot \ln{N_{eq}} &amp; \text{North Sea soft Clay} \\
+1.2 - 0.17\cdot \ln{N_{eq}} &amp; \text{North Sea stiff Clay}
+\end{cases}
+\end{equation}\]</span></p>
+<h2 data-number="2.2" id="p-y-curves-for-fatigue-action"><span
+class="header-section-number">2.2</span> p-y curves for fatigue
+action</h2>
+<p><span class="math display">\[\begin{equation}
+p_{fa} = p_u A_s \cdot \bigg(\frac{y_{fa}}{D}\bigg)^{-B_s}
+\end{equation}\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(y_{fa}\)</span> = lateral displacement
+for fatigue actions</li>
+<li><span class="math inline">\(A_s\)</span> = 0.45 if <span
+class="math inline">\(s_u\)</span> &lt; 40kPa, 0.19 otherwise</li>
+<li><span class="math inline">\(B_s\)</span> = 0.05</li>
+</ul>
+<h2 data-number="2.3" id="p-y-curves-for-earthquake"><span
+class="header-section-number">2.3</span> p-y curves for earthquake</h2>
+<h2 data-number="2.4" id="lateral-capacity-for-sand"><span
+class="header-section-number">2.4</span> Lateral Capacity for sand</h2>
+<p>The ultimate lateral resistance of for pile within sand is the
+minimum of the Eq.(<span class="math inline">\(\ref{eq_pr}\)</span>)</p>
+<p><span class="math display">\[\begin{equation}{\label{eq_pr}}
+p_r = \min{(p_{rs},p_{rd})}
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+p_{rs} = {C_1 z + C_2 D} \cdot \gamma&#39;z
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+p_{rd} = C_3 \cdot D \cdot  \gamma&#39;
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+C_1 = \frac{(tan\beta)^2 \tan\alpha }{\tan{(\beta-\phi&#39;)}}+ K_0
+\bigg(
+    \frac{\tan{\phi&#39;}\tan{\beta}}{\cos{\alpha}\tan{(\beta-\phi&#39;)}}
++ \tan{\beta}(\tan{\phi&#39;}\sin{\beta}-\tan{\alpha})\bigg)
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+C_2 = \frac{\tan{\beta}}{\tan{(\beta-\phi&#39;)}} - K_a
+\end{equation}\]</span></p>
+<p><span class="math display">\[\begin{equation}
+C_3 = K_a ((\tan{\beta})^8-1) + K_0 + \tan{\phi&#39;}(\tan{\beta})^4
+\end{equation}\]</span></p>
+<div id="refs" class="references csl-bib-body hanging-indent"
+data-line-spacing="2" role="list">
+<div id="ref-ISO19901_4" class="csl-entry" role="listitem">
+ISO/DIS 19901-4:2022(E). (2022). <em><span class="nocase">Petroleum and
+natural gas industries — Specific requirements for offshore structures
+—Part 4: Geotechnical design considerations</span></em>.
+</div>
+</div>
+            </div>
+    </div>
+  </div>
+  <script src="https://vjs.zencdn.net/5.4.4/video.js"></script>
+
+</body>
+</html>

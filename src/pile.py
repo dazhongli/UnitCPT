@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 
-def fs(sigma_v, su, alpha, beta, drainage, reduction_ud=1.0, reduction_dr=1.0):
-    return np.where(drainage == 'UD', alpha*su*reduction_ud, beta*sigma_v*reduction_dr)
-
 
 class Pile:
     def __init__(self):
@@ -23,6 +20,12 @@ class PipePile(Pile):
         '''
         Initialise the pile with diameter and thickness
         All the thickness input should be in 'm'
+        @param:
+        dia - diameter of piles (m)
+        thickness = thickness of pile(m)
+        length = length of pile(m)
+        penetration = penetration in to soils (m)
+        corrosion = thickness of hte corrosion (m)
         '''
         super(PipePile, self).__init__()
         self.dia_out = dia
@@ -45,6 +48,7 @@ class PipePile(Pile):
         self.disp_ratio = self.annulus_area/self.gross_area
         self.weight_dry = self.annulus_area * self.length * 78.5
         self.weight_submerged = self.weight_dry*68.5/78.5
+        self.EI = 1/64*self.E*(self.dia_out**4 - self.dia_inner**4)
 
     def can_weight(self, cover_thickness=0.09, submerged=True):
         '''
