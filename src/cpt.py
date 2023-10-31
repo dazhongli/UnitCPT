@@ -14,6 +14,9 @@ from .ags import AGSParser
 from .utilities import to_numeric_all, plot_showgrid
 import matplotlib.pyplot as plt
 
+from .pysand import calc_phi_e, calc_C1, calc_C2, calc_C3,calc_k, calc_pr, calc_A, interpolate_cpt_data, determine_soil_type, calc_y, calc_p, export_p_y_monotonic, export_p_y_cyclic, plot_p_y_curve
+from .pyclay import calc_su, calc_su1, calc_alpha, calc_N_pd, calc_d, calc_N_p0, calc_N_P, calc_pu, calc_OCR, identify_soil_layers, calc_y_mo, calc_p_mo, calc_h_f, calc_N_eq, calc_p_y_mod, calc_p_y_mod, plot_p_y_cyclic
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
@@ -40,6 +43,11 @@ class CPTMethod(Enum):
     FUGRO_05 = 3
     NGI_05 = 4
     UNIFIED = 5
+
+class Clay_type(Enum):
+    Gulf_of_Mexico = 1
+    North_Sea_soft_clay = 2
+    North_Sea_stiff_clay = 3
 
 
 def extract_data_from(filename, row_number, pattern='ags'):
@@ -768,3 +776,151 @@ class CPT:
             current_columns = {self.df.columns}
             '''
             return print_str
+        
+
+    def _shaft_friction_unified_clay(self, pile, z,  qt, Fr, Qt1):
+        '''
+        This returns unit shaft friction of a pile at clay layer using unified CPT method
+        '''
+
+        Iz1 = Qt1 - 12 * np.exp(-1.4 * Fr)
+        if Iz1 > 0:
+            Fst = 1.0
+        else:
+            Fst = 0.5
+        
+        R_star = np.sqrt((pile.dia_out/2)**2 - (pile.dia_inner/2)**2)
+        qt = qt*1000  # qc in MPa
+        h = pile.penetration-z
+
+        return 0.007 * Fst * qt * np.max([h/R_star, 1])**(-0.25)
+    
+
+    def _shaft_friction_unified_sand(self, pile, z, qc, sigma_v_e, compression=True):
+        '''
+        This returns unit shaft friction of a pile at sand layer using unified CPT method
+        '''
+
+        R_star = np.sqrt((pile.dia_out/2)**2 - (pile.dia_inner/2)**2)
+        delta = radians(29)
+        Ar = pile.disp_ratio
+        D = pile.dia_out
+        h= pile.penetration-z
+        depth_ratio = h/D
+        qc = qc*1000  # qc in MPa
+
+        sigma_rc = qc / 44 * Ar ** (0.3) * np.max([depth_ratio, 1])** (-0.4)
+        delta_sigma = qc / 10 * (qc / sigma_v_e) ** (-0.33) * 0.0356 / D
+
+        if compression == True:
+            fl = 0.75
+        else:
+            fl = 0.75
+
+        return fl * (sigma_rc + delta_sigma) * tan(delta)
+
+
+    def base_Qb_unified_clay(self, pile, qp_average):
+        Ar = pile.disp_ratio
+        qp_average = 1000*qp_average
+        return (0.2 + 0.6 * Ar) * qp_average * pile.gross_area
+    
+
+    def base_Qb_unified_sand(self, pile, qp_average):
+        Ar = pile.disp_ratio
+        qp_average = 1000*qp_average
+        return (0.12 + 0.38 * Ar) * qp_average * pile.gross_area
+    
+
+    def calc_pile_capacity(self, pile, compression = True, plot_fig = False):
+        '''
+        This function returns the bearing capacity along the pile
+        '''
+        df = self.df
+        increment = df.SCPT_DPTH[1] - df.SCPT_DPTH[0]
+        df ['qt_avg'] = df.qt.rolling(window = int(3*pile.dia_out/increment), min_periods=1).mean()
+        df ['Qb'] = df.apply(lambda row:self.base_Qb_unified_sand(pile = pile, qp_average = row['qt_avg']) if row.Ic <2.6 else self.base_Qb_unified_clay(pile = pile, qp_average = row['qt_avg']), axis=1)
+        df ['shaft_F'] = pile.perimeter_outer * df.apply(lambda row: self._shaft_friction_unified_sand(
+            pile, row.SCPT_DPTH, row.SCPT_RES, row.sigma_v_e, compression) if row.Ic <2.6 else self._shaft_friction_unified_clay(pile, row.SCPT_DPTH, row.qt, row.Fr, row.Qt1), axis=1)
+        df ['Qs'] = (df.SCPT_DPTH.shift(-1) - df.SCPT_DPTH).fillna(method='ffill')*df.shaft_F.cumsum()
+        df ['Qc'] = df ['Qs'] + df ['Qb']
+
+        if plot_fig:
+            fig = GEOPlot.get_figure(rows=1, cols=4)
+            #fig.add_trace(go.Scatter(x=df.qt,y=df.SCPT_DPTH),row=1,col=1)
+            fig.update_yaxes(range=[df.SCPT_DPTH.max(),0], dtick=2)
+            fig.update_xaxes(side='top')
+            fig.update_layout(height=800, width=1200)
+
+            x_labels = ['qt (MPa)', 'Shaft friction (kN)',
+                    'End bearing capacity (kN)', 'Pile axial capaity (kN)']
+            for i in range(4):
+                fig.update_yaxes(showgrid=True, title='Depth (m)', col=i+1, row=1)
+                fig.update_xaxes(showgrid=True, col=i+1, row=1,
+                             side='top', title=x_labels[i])
+            fig.update_xaxes(range=[0, 25], dtick=5, row=1, col=1)
+            fig.add_trace(go.Scatter(x=df.qt, y=df.SCPT_DPTH, name='qt(MPa)'), col=1, row=1)
+            fig.add_trace(go.Scatter(x=df.Qs, y=df.SCPT_DPTH, name='Qs (kN)'), col=2, row=1)
+            fig.add_trace(go.Scatter(x=df.Qb, y=df.SCPT_DPTH, name='Qb (kN)'), col=3, row=1)
+            fig.add_trace(go.Scatter(x=df.Qc, y=df.SCPT_DPTH, name='Qc (kN)'), col=4, row=1)
+
+            fig.show()
+
+        return df
+    
+    def calc_p_y_curve(self, pile, compression = True, monotonic = True, isotropy = True, interval = 1.0, plot_fig = False, Clay_type = Clay_type.Gulf_of_Mexico):
+        '''
+        This function returns the bearing capacity along the pile
+        '''
+        nkt = 12
+        N1 = 12
+        N2 = 3.22
+        I_p = 35
+        y_interval = 15
+
+        df_resampled = interpolate_cpt_data(self.df, interval)
+        df_resampled ['soil_type'] = df_resampled.apply(lambda row:determine_soil_type(ic = row['Ic']), axis = 1)
+
+        df_resampled ['phi_e'] = df_resampled.apply(lambda row:calc_phi_e(qt = row['qt'], sigma_v = row['sigma_v'], sigma_v_e = row['sigma_v_e']) if row['soil_type'] == 'sand' else None, axis = 1)
+        df_resampled ['C1'] = df_resampled.apply(lambda row:calc_C1(phi_e = row['phi_e']) if row['soil_type'] == 'sand' else None, axis = 1)
+        df_resampled ['C2'] = df_resampled.apply(lambda row:calc_C2(phi_e = row['phi_e']) if row['soil_type'] == 'sand' else None, axis = 1)
+        df_resampled ['C3'] = df_resampled.apply(lambda row:calc_C3(phi_e = row['phi_e']) if row['soil_type'] == 'sand' else None, axis = 1)
+        df_resampled ['k'] = df_resampled.apply(lambda row:calc_k(phi_e = row['phi_e']) if row['soil_type'] == 'sand' else None, axis = 1)
+        df_resampled ['pr'] = df_resampled.apply(lambda row:calc_pr(D = pile.dia_out, gamma = row['gamma'], z = row['SCPT_DPTH'], C1 = row['C1'], C2 = row['C2'], C3 = row['C3']) if row['soil_type'] == 'sand' else None, axis = 1)
+        df_resampled ['A'] = df_resampled.apply(lambda row:calc_A(D = pile.dia_out, z = row['SCPT_DPTH'], monotonic = monotonic) if row['soil_type'] == 'sand' else None, axis = 1)
+
+        df_resampled ['su'] = df_resampled.apply(lambda row:calc_su(qt = row['qt'], sigma_v = row['sigma_v'], nkt = nkt) if row['soil_type'] == 'clay' else None, axis = 1)
+
+        identify_soil_layers(df_resampled)
+
+        df_resampled ['su1'] = df_resampled.apply(lambda row:calc_su1(su = row['su'], su0 = row['su0'], z= row['SCPT_DPTH']) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['alpha'] = df_resampled.apply(lambda row:calc_alpha(su = row['su'], sigma_v_e = row['sigma_v_e']) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['N_pd'] = df_resampled.apply(lambda row:calc_N_pd(alpha = row['alpha']) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['d'] = df_resampled.apply(lambda row:calc_d(su0 = row['su0'], su1 = row['su1'], D = pile.dia_out) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['N_p0'] = df_resampled.apply(lambda row:calc_N_p0(N_1 = N1, N_2 = N2, alpha = row['alpha'], d = row['d'], D = pile.dia_out, N_pd = row['N_pd'], z = row['SCPT_DPTH']) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['N_P'] = df_resampled.apply(lambda row:calc_N_P(N_pd = row['N_pd'], N_p0 = row['N_p0'], gamma = row['gamma'], z = row['SCPT_DPTH'], su = row['su'], isotropy = isotropy) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['pu'] = df_resampled.apply(lambda row:calc_pu(su = row['su'], D = pile.dia_out, N_P = row['N_P']) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['OCR'] = df_resampled.apply(lambda row:calc_OCR(Qt1 = row['Qt1']) if row['soil_type'] == 'clay' else None, axis = 1)
+
+        for i in range(12):
+            df_resampled [f'y{i}'] = df_resampled.apply(lambda row:calc_y_mo(I_p = I_p, OCR = row['OCR'], D= pile.dia_out, id_p = i) if row['soil_type'] == 'clay' else calc_y(y_interval = y_interval, i = i), axis = 1)
+            df_resampled [f'p{i}'] = df_resampled.apply(lambda row:calc_p_mo(pu = row['pu'], id_p = i) if row['soil_type'] == 'clay' else calc_p(y = row[f'y{i}'], A = row['A'], pr = row['pr'], z = row['SCPT_DPTH'], k = row['k']), axis = 1)
+
+        if monotonic != True:
+            for i in range(12):
+                df_resampled [f'h_f{i}'] = df_resampled.apply(lambda row:calc_h_f(p_mo = row[f'p{i}'], p_u = row['pu'], z= row['SCPT_DPTH'], D = pile.dia_out) if row['soil_type'] == 'clay' else None, axis = 1)
+                df_resampled [f'N_eq{i}'] = df_resampled.apply(lambda row:calc_N_eq(h_f = row[f'h_f{i}'], clay_type = Clay_type) if row['soil_type'] == 'clay' else None, axis = 1)
+                df_resampled [f'p_cy{i}'] = df_resampled.apply(lambda row:calc_p_y_mod(N_eq = row[f'N_eq{i}'], clay_type = Clay_type)[0] * row[f'p{i}'] if row['soil_type'] == 'clay' else None, axis = 1)
+                df_resampled [f'y_cy{i}'] = df_resampled.apply(lambda row:calc_p_y_mod(N_eq = row[f'N_eq{i}'], clay_type = Clay_type)[1] * row[f'y{i}'] if row['soil_type'] == 'clay' else None, axis = 1) 
+
+        if monotonic == True:
+            export_p_y_monotonic(df_resampled, "cpt_data_resampled.xlsx")
+        else:
+            export_p_y_cyclic(df_resampled, "cpt_data_resampled_cyclic.xlsx")
+
+        if plot_fig:         
+            plot_p_y_curve(df_resampled, 8)
+            if monotonic != True:
+                plot_p_y_cyclic(df_resampled, 8)
+
+        return df_resampled

@@ -1,4 +1,4 @@
-from .cpt import CPT
+#from .cpt import CPT
 from pathlib import Path
 import os
 import plotly.io as pio
@@ -88,7 +88,7 @@ def calc_N_P(N_pd, N_p0, gamma, z, su, isotropy):
     if z == 0:
         N_P0 = N_P
 
-    if isotropy == Loading_direction.Anisotropy:
+    if isotropy != True:
         C_W = 1 + (0.9 - 1) * (N_pd - N_P) / (N_pd - N_P0)
         N_P = min(C_W * N_p0 + ((gamma - 10) * z) / su, N_pd)
     
@@ -271,11 +271,9 @@ def plot_p_y_cyclic(df, plot_interval):
     fig.show()
     #return fig
 
-
+'''
 def shaft_friction_unified_clay(pile, z,  qt, Fr, Qt1):
-    '''
-    This returns unit shaft friction of a pile at clay layer using unified CPT method
-    '''
+
     Iz1 = Qt1 - 12 * np.exp(-1.4 * Fr)
     if Iz1 > 0:
         Fst = 1.0
@@ -292,3 +290,5 @@ def base_Qb_unified_clay(pile, qp_average):
     Ar = pile.disp_ratio
     qp_average = 1000*qp_average
     return (0.2 + 0.6 * Ar) * qp_average * pile.gross_area
+
+'''

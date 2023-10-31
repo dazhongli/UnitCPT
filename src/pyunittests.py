@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from src.p_y_sand import *
-from src.p_y_clay import *
+from src.pysand import *
+from src.pyclay import *
 
 class TestUnifiedCPT(unittest.TestCase):
 

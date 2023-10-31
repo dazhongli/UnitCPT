@@ -5,7 +5,7 @@ import plotly.io as pio
 import numpy as np
 import pandas as pd
 from numpy import degrees, log10, pi, radians, tan, sin, cos
-from src.p_y_sand import *
+from src.pysand import *
 from src.pile import PipePile
 
 

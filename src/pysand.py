@@ -1,4 +1,4 @@
-from .cpt import CPT
+#from .cpt import CPT
 from pathlib import Path
 import os
 import plotly.io as pio
@@ -104,11 +104,11 @@ def calc_pr(D, gamma, z, C1, C2, C3):
     p_rd = C3 * D * gamma_e * z
     return min(p_rs, p_rd)
 
-def calc_A(D, z, loading):
+def calc_A(D, z, monotonic):
     '''
     This function calculates the factor to account for static or cyclic actions, for p-y curves for sand
     '''
-    if loading == Loading_type.Monotonic:
+    if monotonic == True:
         return max((3.0 - 0.8 * z / D), 0.9)
     else:
         return 0.9
@@ -125,15 +125,35 @@ def calc_y(y_interval, i):
     '''
     return y_interval * i
 
-def export_p_y_sand(df, filename):
+def export_p_y_monotonic(df, filename):
     '''
     Export p-y data to excel
     '''
-    df.to_excel(filename, index=False)
+    df_export = pd.DataFrame()
+    for i in range(12):
+        df_export [f'y{i}'] = df.loc[:, [f'y{i}']]
+        df_export [f'p{i}'] = df.loc[:, [f'p{i}']]
+    df_export.to_excel(filename, index=False)
     print(f"{filename} has been exported successfully.")
     #writer = pd.ExcelWriter('data.xlsx')
     #df.to_excel(writer, sheet_name='Sheet 1')
     #writer.save()
+
+def export_p_y_cyclic(df, filename):
+    '''
+    Export p-y data to excel
+    '''
+    df_export = pd.DataFrame()
+
+    for i in range(12):
+        if df.soil_type == 'clay':
+            df_export [f'y_cy{i}'] = df.loc[:, [f'y_cy{i}']]
+            df_export [f'p_cy{i}'] = df.loc[:, [f'p_cy{i}']]
+        else:
+            df_export [f'y{i}'] = df.loc[:, [f'y{i}']]
+            df_export [f'p{i}'] = df.loc[:, [f'p{i}']]
+    df_export.to_excel(filename, index=False)
+    print(f"{filename} has been exported successfully.")
 
 def plot_p_y_curve(df, plot_interval):
     '''
@@ -172,10 +192,8 @@ def interpolate_cpt_data(df, interval):
         df_resampled[col_name] = func_name(new_depths)
     return df_resampled
 
+'''
 def shaft_friction_unified_sand(pile, z, qc, sigma_v_e, compression):
-    '''
-    This returns unit shaft friction of a pile at sand layer using unified CPT method
-    '''
 
     R_star = np.sqrt((pile.dia_out/2)**2 - (pile.dia_inner/2)**2)
     delta = radians(29)
@@ -199,3 +217,5 @@ def base_Qb_unified_sand(pile, qp_average):
     Ar = pile.disp_ratio
     qp_average = 1000*qp_average
     return (0.12 + 0.38 * Ar) * qp_average * pile.gross_area
+
+'''
