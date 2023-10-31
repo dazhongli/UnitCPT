@@ -96,4 +96,4 @@ dependencies:
     - pyyaml==6.0
     - scipy==1.10.1
     - shapely==2.0.1
-prefix: C:\ProgramData\Miniconda3\envs\unitcpt
+prefix:  C:\ProgramData\Anaconda3\envs\unitcpt

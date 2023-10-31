@@ -7,6 +7,12 @@ import pandas as pd
 from numpy import degrees, log10, pi, radians, tan, sin, cos
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
+from scipy.interpolate import interp1d
+from enum import Enum
+
+class Loading_type(Enum):
+    Cyclic = 1
+    Monotonic = 2
 
 def determine_soil_type(ic):
     '''
@@ -102,7 +108,7 @@ def calc_A(D, z, loading):
     '''
     This function calculates the factor to account for static or cyclic actions, for p-y curves for sand
     '''
-    if loading == 'Monotonic':
+    if loading == Loading_type.Monotonic:
         return max((3.0 - 0.8 * z / D), 0.9)
     else:
         return 0.9
@@ -157,26 +163,39 @@ def plot_p_y_curve(df, plot_interval):
     #return fig
 
 def interpolate_cpt_data(df, interval):
-    new_depths = pd.Series(np.arange(int(df['SCPT_DPTH'].min()), int(df['SCPT_DPTH'].max())+1, interval))
+    new_depths = pd.Series(np.arange(int(df['SCPT_DPTH'].min())+interval, int(df['SCPT_DPTH'].max()), interval))
     col_names = df.iloc[:, 2:].columns.tolist()
-    results = []
+    df_resampled = pd.DataFrame()
+    df_resampled['SCPT_DPTH'] = new_depths
     for col_name in col_names:
-        col_results = []
-        for depth in new_depths:
-            if depth in df['SCPT_DPTH'].values:
-                new_value = df.set_index('SCPT_DPTH')[col_name].loc[depth]
-                col_results.append(new_value)
-            else:
-                df_sorted = df.sort_values('SCPT_DPTH')
-                idx_smaller = df_sorted['SCPT_DPTH'].searchsorted(depth, side='right') - 1
-                idx_larger = idx_smaller + 1
-                depth_smaller = df_sorted.iloc[idx_smaller]['SCPT_DPTH']
-                depth_larger = df_sorted.iloc[idx_larger]['SCPT_DPTH']
-                value_smaller = df_sorted.iloc[idx_smaller][col_name]
-                value_larger = df_sorted.iloc[idx_larger][col_name]
-                new_value = np.interp(depth, [depth_smaller, depth_larger], [value_smaller, value_larger])
-                col_results.append(new_value)
-        results.append(col_results)    
-    new_df = pd.DataFrame(dict(zip(col_names, results)))
-    new_df['SCPT_DPTH'] = new_depths
-    return new_df
+        func_name = interp1d(x = df['SCPT_DPTH'], y = df[col_name], kind = 'linear')
+        df_resampled[col_name] = func_name(new_depths)
+    return df_resampled
+
+def shaft_friction_unified_sand(pile, z, qc, sigma_v_e, compression):
+    '''
+    This returns unit shaft friction of a pile at sand layer using unified CPT method
+    '''
+
+    R_star = np.sqrt((pile.dia_out/2)**2 - (pile.dia_inner/2)**2)
+    delta = radians(29)
+    Ar = pile.disp_ratio
+    D = pile.dia_out
+    h= pile.penetration-z
+    depth_ratio = h/D
+    qc = qc*1000  # qc in MPa
+
+    sigma_rc = qc / 44 * Ar ** (0.3) * np.max([depth_ratio, 1])** (-0.4)
+    delta_sigma = qc / 10 * (qc / sigma_v_e) ** (-0.33) * 0.0356 / D
+
+    if compression == 'true':
+        fl = 0.75
+    else:
+        fl = 0.75
+
+    return fl * (sigma_rc + delta_sigma) * tan(delta)
+
+def base_Qb_unified_sand(pile, qp_average):
+    Ar = pile.disp_ratio
+    qp_average = 1000*qp_average
+    return (0.12 + 0.38 * Ar) * qp_average * pile.gross_area

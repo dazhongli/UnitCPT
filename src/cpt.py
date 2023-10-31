@@ -39,6 +39,7 @@ class CPTMethod(Enum):
     ICP_05 = 2
     FUGRO_05 = 3
     NGI_05 = 4
+    UNIFIED = 5
 
 
 def extract_data_from(filename, row_number, pattern='ags'):
@@ -141,12 +142,19 @@ class CPT:
         '''
         '''
         assert (self.unit_set == True)
+        '''
+        Backfill the missing values (SCPT_RES, SCPT_FRES, SCPT_PWP2, Rf) in the original cpt file at initial penetration depth. 
+        '''
+        self.df['SCPT_RES'] = self.df['SCPT_RES'].fillna(method='bfill')
+        self.df['SCPT_FRES'] = self.df['SCPT_FRES'].fillna(method='bfill')
+        self.df['SCPT_PWP2'] = self.df['SCPT_PWP2'].fillna(method='bfill')
         self.df['qt'] = self.df.SCPT_RES + \
             self.df.SCPT_PWP2 * (1-self.net_area_ratio)/1000
         self.df['Rf'] = self.df.SCPT_FRES/self.df.qt/1000*100
+        self.df['Rf'] = self.df.Rf.fillna(method='bfill')
         self.df['gamma'] = self.df.apply(lambda row: self.gamma_total(
             row.Rf, row.qt), axis=1)
-        self.df['gamma'] = self.df.gamma.fillna(method='ffill')
+        
         self.df['sigma_v'] = ((self.df.SCPT_DPTH.shift(-1) -
                               self.df.SCPT_DPTH).fillna(method='ffill')*self.df.gamma).cumsum()
         self.df['u0'] = self.df.SCPT_DPTH*10
@@ -171,9 +179,12 @@ class CPT:
         # Calculate the 'Soil Behavior Type Index' Ic
         self.df['Ic'] = self.df.apply(lambda row: self.calc_Ic(
             row.qt, row.sigma_v, row.sigma_v_e, row.Fr)[0], axis=1)
+        self.df['Ic'] = self.df.Ic.fillna(method='bfill')
         self.df['n'] = self.df.apply(lambda row: self.calc_Ic(
             row.qt, row.sigma_v, row.sigma_v_e, row.Fr)[1], axis=1)
+        self.df['n'] = self.df.n.fillna(method='bfill')
         self.df['Qtn'] = (df.qt*1000 - df.sigma_v)/PA * (PA/df.sigma_v_e)**df.n
+        self.df['Qtn'] = self.df.Qtn.fillna(method='bfill')
         self.df['k'] = self.df.apply(
             lambda row: self.permeability(row.Ic), axis=1)
         self.df['M'] = self.df.apply(lambda row: self.constrained_modulus(

@@ -307,7 +307,7 @@ class PileDriving:
         self.soil = soil
 
     def shape_factor(self, qc: float, sigma_v: float) -> float:
-        return sqrt(qc*1000/sigma_v)/80
+        return np.sqrt(qc*1000/sigma_v)/80
 
     def kh(self, qc, sigma_v):
         '''
