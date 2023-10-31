@@ -80,7 +80,7 @@ class ALP:
         logger.debug('File saved successfully')
         
     def set_section(self, section_id, section_string, input_type, effective_width, EI):
-        self.proj.SetSection(section_id, section_string, section_type, diameter, EI)
+        self.proj.SetSection(section_id, section_string, input_type, effective_width, EI)
 
     def set_node_load_displacement(self, node_ID, force, moment, displacement):
         '''

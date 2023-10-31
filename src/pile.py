@@ -45,6 +45,7 @@ class PipePile(Pile):
         self.disp_ratio = self.annulus_area/self.gross_area
         self.weight_dry = self.annulus_area * self.length * 78.5
         self.weight_submerged = self.weight_dry*68.5/78.5
+        self.EI = 1/64*(self.dia_out**4 - self.dia_inner**4)*self.E
 
     def can_weight(self, cover_thickness=0.09, submerged=True):
         '''
