@@ -29,8 +29,8 @@ navbar = dbc.Navbar(
                     dbc.Col(dbc.NavLink('CPT', href='CPT')),
                     dbc.Col(dbc.NavLink('Pile', href='pile')),
                     # dbc.Col(dbc.NavLink('Progress', href='progress')),
-                    dbc.Col(dbc.NavLink('Caissons', href='caisson')),
-                    dbc.Col(dbc.NavLink('Site', href='plaxis')),
+                    # dbc.Col(dbc.NavLink('Caissons', href='caisson')),
+                    dbc.Col(dbc.NavLink('Site', href='Plaxis')),
                     dbc.Col(dbc.NavLink('About',
                                         href='report'))
                 ],

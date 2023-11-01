@@ -79,6 +79,10 @@ class ALP:
         self.proj.Save()
         logger.debug('File saved successfully')
         
+    def save_as(self,filename):
+        self.proj.SaveAs(filename)
+        logger.debug(f'{filename}saved successfully')
+
     def set_section(self, section_id, section_string, input_type, effective_width, EI):
         self.proj.SetSection(section_id, section_string, input_type, effective_width, EI)
 
