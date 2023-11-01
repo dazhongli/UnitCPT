@@ -15,7 +15,11 @@ from .utilities import to_numeric_all, plot_showgrid
 import matplotlib.pyplot as plt
 
 from .pysand import calc_phi_e, calc_C1, calc_C2, calc_C3,calc_k, calc_pr, calc_A, interpolate_cpt_data, determine_soil_type, calc_y, calc_p, export_p_y_monotonic, export_p_y_cyclic, plot_p_y_curve
-from .pyclay import calc_su, calc_su1, calc_alpha, calc_N_pd, calc_d, calc_N_p0, calc_N_P, calc_pu, calc_OCR, identify_soil_layers, calc_y_mo, calc_p_mo, calc_h_f, calc_N_eq, calc_p_y_mod, calc_p_y_mod, plot_p_y_cyclic
+from .pyclay import calc_su, calc_su1, calc_alpha, calc_N_pd, calc_d, calc_N_p0, calc_N_P, calc_N_P_anisotropy, calc_pu, calc_OCR, identify_soil_layers, calc_y_mo, calc_p_mo, calc_h_f, calc_N_eq, calc_p_y_mod, calc_p_y_mod, plot_p_y_cyclic
+
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import KBinsDiscretizer
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -868,19 +872,21 @@ class CPT:
 
         return df
     
-    def calc_p_y_curve(self, pile, compression = True, monotonic = True, isotropy = True, interval = 1.0, plot_fig = False, Clay_type = Clay_type.Gulf_of_Mexico):
+    def calc_p_y_curve(self, pile, compression = True, monotonic = True, isotropy = True, interval = 1.0, y_range = 600, plot_fig = False, Clay_type = Clay_type.Gulf_of_Mexico):
         '''
-        This function returns the bearing capacity along the pile
+        This function returns the p-y-cutves along the pile
         '''
+        #specified soil parameters
         nkt = 12
         N1 = 12
         N2 = 3.22
         I_p = 35
-        y_interval = 15
 
+        #interpolate cpt data and identify soil type
         df_resampled = interpolate_cpt_data(self.df, interval)
         df_resampled ['soil_type'] = df_resampled.apply(lambda row:determine_soil_type(ic = row['Ic']), axis = 1)
 
+        #calculate p-y curve parameters for sand
         df_resampled ['phi_e'] = df_resampled.apply(lambda row:calc_phi_e(qt = row['qt'], sigma_v = row['sigma_v'], sigma_v_e = row['sigma_v_e']) if row['soil_type'] == 'sand' else None, axis = 1)
         df_resampled ['C1'] = df_resampled.apply(lambda row:calc_C1(phi_e = row['phi_e']) if row['soil_type'] == 'sand' else None, axis = 1)
         df_resampled ['C2'] = df_resampled.apply(lambda row:calc_C2(phi_e = row['phi_e']) if row['soil_type'] == 'sand' else None, axis = 1)
@@ -889,23 +895,26 @@ class CPT:
         df_resampled ['pr'] = df_resampled.apply(lambda row:calc_pr(D = pile.dia_out, gamma = row['gamma'], z = row['SCPT_DPTH'], C1 = row['C1'], C2 = row['C2'], C3 = row['C3']) if row['soil_type'] == 'sand' else None, axis = 1)
         df_resampled ['A'] = df_resampled.apply(lambda row:calc_A(D = pile.dia_out, z = row['SCPT_DPTH'], monotonic = monotonic) if row['soil_type'] == 'sand' else None, axis = 1)
 
+        #calculate p-y curve parameters for clay
         df_resampled ['su'] = df_resampled.apply(lambda row:calc_su(qt = row['qt'], sigma_v = row['sigma_v'], nkt = nkt) if row['soil_type'] == 'clay' else None, axis = 1)
-
         identify_soil_layers(df_resampled)
-
         df_resampled ['su1'] = df_resampled.apply(lambda row:calc_su1(su = row['su'], su0 = row['su0'], z= row['SCPT_DPTH']) if row['soil_type'] == 'clay' else None, axis = 1)
         df_resampled ['alpha'] = df_resampled.apply(lambda row:calc_alpha(su = row['su'], sigma_v_e = row['sigma_v_e']) if row['soil_type'] == 'clay' else None, axis = 1)
         df_resampled ['N_pd'] = df_resampled.apply(lambda row:calc_N_pd(alpha = row['alpha']) if row['soil_type'] == 'clay' else None, axis = 1)
         df_resampled ['d'] = df_resampled.apply(lambda row:calc_d(su0 = row['su0'], su1 = row['su1'], D = pile.dia_out) if row['soil_type'] == 'clay' else None, axis = 1)
         df_resampled ['N_p0'] = df_resampled.apply(lambda row:calc_N_p0(N_1 = N1, N_2 = N2, alpha = row['alpha'], d = row['d'], D = pile.dia_out, N_pd = row['N_pd'], z = row['SCPT_DPTH']) if row['soil_type'] == 'clay' else None, axis = 1)
-        df_resampled ['N_P'] = df_resampled.apply(lambda row:calc_N_P(N_pd = row['N_pd'], N_p0 = row['N_p0'], gamma = row['gamma'], z = row['SCPT_DPTH'], su = row['su'], isotropy = isotropy) if row['soil_type'] == 'clay' else None, axis = 1)
-        df_resampled ['pu'] = df_resampled.apply(lambda row:calc_pu(su = row['su'], D = pile.dia_out, N_P = row['N_P']) if row['soil_type'] == 'clay' else None, axis = 1)
+        df_resampled ['N_P'] = df_resampled.apply(lambda row:calc_N_P(N_pd = row['N_pd'], N_p0 = row['N_p0'], gamma = row['gamma'], z = row['SCPT_DPTH'], su = row['su']) if row['soil_type'] == 'clay' else None, axis = 1)
+        N_P0 = df_resampled.loc[df_resampled['soil_type'] == 'clay', 'N_P'].iloc[0]
+        df_resampled ['N_P_ani'] = df_resampled.apply(lambda row:calc_N_P_anisotropy(N_P = row['N_P'], N_P0 = N_P0, N_pd = row['N_pd'], N_p0 = row['N_p0'], gamma = row['gamma'], z = row['SCPT_DPTH'], su = row['su']) if row['soil_type'] == 'clay' and isotropy != True else None, axis = 1)
+        df_resampled ['pu'] = df_resampled.apply(lambda row:calc_pu(su = row['su'], D = pile.dia_out, N_P = row['N_P']) if row['soil_type'] == 'clay' and isotropy == True else calc_pu(su = row['su'], D = pile.dia_out, N_P = row['N_P_ani']) if row['soil_type'] == 'clay' and isotropy != True else None, axis = 1)
         df_resampled ['OCR'] = df_resampled.apply(lambda row:calc_OCR(Qt1 = row['Qt1']) if row['soil_type'] == 'clay' else None, axis = 1)
 
+        #generate monotonic p-y curves
         for i in range(12):
-            df_resampled [f'y{i}'] = df_resampled.apply(lambda row:calc_y_mo(I_p = I_p, OCR = row['OCR'], D= pile.dia_out, id_p = i) if row['soil_type'] == 'clay' else calc_y(y_interval = y_interval, i = i), axis = 1)
+            df_resampled [f'y{i}'] = df_resampled.apply(lambda row:calc_y_mo(I_p = I_p, OCR = row['OCR'], D= pile.dia_out, id_p = i) if row['soil_type'] == 'clay' else calc_y(y_range = y_range, i = i), axis = 1)
             df_resampled [f'p{i}'] = df_resampled.apply(lambda row:calc_p_mo(pu = row['pu'], id_p = i) if row['soil_type'] == 'clay' else calc_p(y = row[f'y{i}'], A = row['A'], pr = row['pr'], z = row['SCPT_DPTH'], k = row['k']), axis = 1)
 
+        #generate cyclic p-y curves
         if monotonic != True:
             for i in range(12):
                 df_resampled [f'h_f{i}'] = df_resampled.apply(lambda row:calc_h_f(p_mo = row[f'p{i}'], p_u = row['pu'], z= row['SCPT_DPTH'], D = pile.dia_out) if row['soil_type'] == 'clay' else None, axis = 1)
@@ -913,14 +922,148 @@ class CPT:
                 df_resampled [f'p_cy{i}'] = df_resampled.apply(lambda row:calc_p_y_mod(N_eq = row[f'N_eq{i}'], clay_type = Clay_type)[0] * row[f'p{i}'] if row['soil_type'] == 'clay' else None, axis = 1)
                 df_resampled [f'y_cy{i}'] = df_resampled.apply(lambda row:calc_p_y_mod(N_eq = row[f'N_eq{i}'], clay_type = Clay_type)[1] * row[f'y{i}'] if row['soil_type'] == 'clay' else None, axis = 1) 
 
+        #export p-y curve to excel
         if monotonic == True:
-            export_p_y_monotonic(df_resampled, "cpt_data_resampled.xlsx")
+            export_p_y_monotonic(df_resampled, "cpt_data_p_y_curve.xlsx")
         else:
-            export_p_y_cyclic(df_resampled, "cpt_data_resampled_cyclic.xlsx")
+            export_p_y_cyclic(df_resampled, "cpt_data_p_y_curve_cyclic.xlsx")
 
+        df_resampled.to_excel("cpt_data_resampled.xlsx", index=False)
+
+        #plot p-y curve figures if applicable
         if plot_fig:         
             plot_p_y_curve(df_resampled, 8)
             if monotonic != True:
                 plot_p_y_cyclic(df_resampled, 8)
 
         return df_resampled
+    
+    def identify_soil_layers(self, num_layers = 15):
+        X = self.df ['SCPT_DPTH']
+        y = self.df ['Ic']
+
+        X = X.values.reshape(-1, 1)
+        y = y.values.reshape(-1, 1)
+        line_X = np.linspace(X.min(), X.max(), 1000, endpoint=False).reshape(-1, 1)
+
+        enc = KBinsDiscretizer(n_bins = num_layers, encode = "onehot")
+        #enc = KBinsDiscretizer(n_bins = num_layers, encode = "ordinal")
+        X_binned = enc.fit_transform(X)
+        Line_binned = enc.fit_transform(line_X)
+
+        LinearR = LinearRegression().fit(X_binned, y)
+        TreeR = DecisionTreeRegressor(random_state = 0).fit(X_binned, y)
+
+        fig = go.Figure()
+
+        ic_value1 = 0.65
+        ic_value2 = 1.875
+        ic_value3 = 2.525
+        ic_value4 = 2.975
+        ic_value5 = 3.475
+
+        fig.add_trace(go.Scatter(x=y.flatten(), y=X[:, 0], mode='lines', line=dict(width=0.5, color='black'), name='CPT data'))
+        #fig.add_trace(go.Scatter(x=LinearR.predict(Line_binned), y=line_X.flatten(), mode='lines', line=dict(width=5, color='green'), name='linear regression'))
+        fig.add_trace(go.Scatter(x=TreeR.predict(Line_binned), y=line_X.flatten(), mode='lines', line=dict(width=5, color='crimson'), name='Fitting with {} soil layers'.format(num_layers)))
+
+        fig.add_shape(type='line', x0=ic_value1, y0=X.min(), x1=ic_value1, y1=X.max(), line=dict(width=1.5, color='sienna'))
+        fig.add_shape(type='line', x0=ic_value2, y0=X.min(), x1=ic_value2, y1=X.max(), line=dict(width=1.5, color='palevioletred'))
+        fig.add_shape(type='line', x0=ic_value3, y0=X.min(), x1=ic_value3, y1=X.max(), line=dict(width=3, color='dimgray'))
+        fig.add_shape(type='line', x0=ic_value4, y0=X.min(), x1=ic_value4, y1=X.max(), line=dict(width=1.5, color='goldenrod'))
+        fig.add_shape(type='line', x0=ic_value5, y0=X.min(), x1=ic_value5, y1=X.max(), line=dict(width=1.5, color='cornflowerblue'))
+
+        for y in enc.bin_edges_[0]:
+            fig.add_shape(type='line', x0=0, y0=y, x1=y.max(), y1=y, line=dict(width=1, color='silver'))
+
+        fig.add_shape(type='rect', x0=0, y0=X.min(), x1=ic_value1, y1=X.max(), fillcolor='sienna', opacity=0.2, layer='below', line=dict(width=0))
+        fig.add_shape(type='rect', x0=ic_value1, y0=X.min(), x1=ic_value2, y1=X.max(), fillcolor='palevioletred', opacity=0.2, layer='below', line=dict(width=0))
+        fig.add_shape(type='rect', x0=ic_value2, y0=X.min(), x1=ic_value3, y1=X.max(), fillcolor='grey', opacity=0.2, layer='below', line=dict(width=0))
+        fig.add_shape(type='rect', x0=ic_value3, y0=X.min(), x1=ic_value4, y1=X.max(), fillcolor='goldenrod', opacity=0.2, layer='below', line=dict(width=0))
+        fig.add_shape(type='rect', x0=ic_value4, y0=X.min(), x1=ic_value5, y1=X.max(), fillcolor='cornflowerblue', opacity=0.2, layer='below', line=dict(width=0))
+
+        fig.add_annotation(x=(0+ic_value1)/2, y=(X.min()+X.max())/2, text='Gravelly sand to dense sand', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+        fig.add_annotation(x=(ic_value1+ic_value2)/2, y=(X.min()+X.max())/2, text='Sands - clean sand to silty sand', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+        fig.add_annotation(x=(ic_value2+ic_value3)/2, y=(X.min()+X.max())/2, text='Sand mixtures - silty sand to sandy silt', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+        fig.add_annotation(x=(ic_value3+ic_value4)/2, y=(X.min()+X.max())/2, text='Silt mixture - Clayey silt to silty clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+        fig.add_annotation(x=(ic_value4+ic_value5)/2, y=(X.min()+X.max())/2, text='Clays - silty clay to clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+        fig.add_annotation(x=(ic_value5+4)/2, y=(X.min()+X.max())/2, text='Organic Soils - clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+
+        fig.update_xaxes(range=[0, 4], title='Ic', linecolor='black', tickcolor='black', ticks="outside", side='top')
+        fig.update_yaxes(range=[X.max(), 0], title='Depth (m)', linecolor='black', tickcolor='black', ticks="outside")
+        fig.update_layout(height=750, width=500, margin=dict(l=50, r=50, b=50, t=50, pad=4), plot_bgcolor='white', legend=dict(yanchor='top', xanchor='center', x = 0.5, y = -0.02))
+        fig.show()
+
+        #df_export = pd.DataFrame()
+        #df_export ['line_X'] = line_X
+        #df_export ['liLine_binnedne_X'] = Line_binned
+        #df_export ['TreeR'] = TreeR.predict(Line_binned)
+        #df_export.to_excel("test", index=False)
+
+        print("line_X shape: ", line_X.shape)
+        print("Line_binned shape: ", Line_binned.shape)
+        print("TreeR shape: ", TreeR.predict(Line_binned).shape)
+
+        plot_x = TreeR.predict(Line_binned)
+        plot_y = line_X.flatten()
+
+        #print("Line_binned all", Line_binned)
+        #print("Line_binned value", Line_binned[:, 3])
+        #indices, values = Line_binned[:, 3]
+        #for i in range(len(indices)):
+            #print("Line_binned value", indices[i])
+
+
+    def identify_soil_layers_plotly(self, num_layers = 15):
+        X = self.df ['SCPT_DPTH']
+        y = self.df ['Ic']
+
+        X = X.values.reshape(-1, 1)
+        y = y.values.reshape(-1, 1)
+        line_X = np.linspace(X.min(), X.max(), 1000, endpoint=False).reshape(-1, 1)
+
+        enc = KBinsDiscretizer(n_bins = num_layers, encode = "onehot")
+        #enc = KBinsDiscretizer(n_bins = num_layers, encode = "ordinal")
+        X_binned = enc.fit_transform(X)
+        Line_binned = enc.fit_transform(line_X)
+
+        LinearR = LinearRegression().fit(X_binned, y)
+        TreeR = DecisionTreeRegressor(random_state = 0).fit(X_binned, y)
+
+        fig, ax1 = plt.subplots(figsize = (4, 7.5))
+
+        ic_value1 = 0.65
+        ic_value2 = 1.875
+        ic_value3 = 2.525
+        ic_value4 = 2.975
+        ic_value5 = 3.475
+
+        #ax2.plot(LinearR_.predict(Line_binned), line_X, linewidth = 1, color = 'green', linestyle = '-', label = 'linear regression')
+        ax1.plot(TreeR.predict(Line_binned), line_X, linewidth = 4, color = 'crimson', linestyle = '-', label = 'decision tree')
+        ax1.vlines(ic_value3, X.min(), X.max(), linewidth = 2.5, color='dimgray', label='Ic = {}'.format(ic_value3))
+        ax1.vlines(ic_value1, X.min(), X.max(), color='sienna')
+        ax1.vlines(ic_value2, X.min(), X.max(), color='palevioletred')
+        ax1.vlines(ic_value4, X.min(), X.max(), color='goldenrod')
+        ax1.vlines(ic_value5, X.min(), X.max(), color='cornflowerblue')
+        ax1.hlines(enc.bin_edges_[0], 0, y.max(), linewidth = 1, alpha = 0.2)
+        ax1.plot(y, X[:, 0], linewidth=0.5, color='black')
+        ax1.legend(loc = "best")
+        ax1.set_xlabel("Ic")
+        ax1.set_ylabel("Depth")
+
+        ax1.axvspan(0, ic_value1, X.min(), X.max(), alpha=0.2, color='sienna')
+        ax1.axvspan(ic_value1, ic_value2, X.min(), X.max(), alpha=0.2, color='palevioletred')
+        ax1.axvspan(ic_value2, ic_value3, X.min(), X.max(), alpha=0.2, color='grey')
+        ax1.axvspan(ic_value3, ic_value4, X.min(), X.max(), alpha=0.2, color='goldenrod')
+        ax1.axvspan(ic_value4, ic_value5, X.min(), X.max(), alpha=0.2, color='cornflowerblue')
+
+        ax1.text((0 + ic_value1) / 2, (X.min() + X.max()) / 2, "Gravelly sand to dense sand", rotation=90, ha='center', va='center', fontsize = 12, fontname = 'Arial')
+        ax1.text((ic_value1 + ic_value2) / 2, (X.min() + X.max()) / 2, "Sands - clean sand to silty sand", rotation=90, ha='center', va='center', fontsize = 12, fontname = 'Arial')
+        ax1.text((ic_value2 + ic_value3) / 2, (X.min() + X.max()) / 2, "Sand mixtures - silty sand to sandy silt", rotation=90, ha='center', va='center', fontsize = 12, fontname = 'Arial')
+        ax1.text((ic_value3 + ic_value4) / 2, (X.min() + X.max()) / 2, "Silt mixture - Clayey silt to silty clay", rotation=90, ha='center', va='center', fontsize = 12, fontname = 'Arial')
+        ax1.text((ic_value4 + ic_value5) / 2, (X.min() + X.max()) / 2, "Clays - silty clay to clay", rotation=90, ha='center', va='center', fontsize = 12, fontname = 'Arial')
+        ax1.text((ic_value5 + 4) / 2, (X.min() + X.max()) / 2, "Organic Soils - clay", rotation=90, ha='center', va='center', fontsize = 12, fontname = 'Arial')
+
+        ax1.set_ylim(0, X.max())
+        ax1.set_xlim(0, 4.0)
+
+        plt.show()

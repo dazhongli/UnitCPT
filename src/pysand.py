@@ -119,17 +119,20 @@ def calc_p(y, A, pr, z, k):
     '''
     return A * pr * np.tanh(k * z / (A * pr) * y / 1000)
 
-def calc_y(y_interval, i):
+def calc_y(y_range, i):
     '''
     This function calculates the lateral soil resistance-displacement p-y relationship for a pile in sand
     '''
-    return y_interval * i
+    logspace_points = [0]
+    logspace_points += list(np.logspace(0, np.log10(y_range), 11, base=10.0, endpoint=True))
+    return logspace_points[i]
 
 def export_p_y_monotonic(df, filename):
     '''
-    Export p-y data to excel
+    Export monotonic p-y data to excel
     '''
     df_export = pd.DataFrame()
+    df_export ['Depth'] = df.loc[:, ['SCPT_DPTH']]
     for i in range(12):
         df_export [f'y{i}'] = df.loc[:, [f'y{i}']]
         df_export [f'p{i}'] = df.loc[:, [f'p{i}']]
@@ -141,17 +144,19 @@ def export_p_y_monotonic(df, filename):
 
 def export_p_y_cyclic(df, filename):
     '''
-    Export p-y data to excel
+    Export cyclic p-y data to excel
     '''
     df_export = pd.DataFrame()
-
+    df_export ['Depth'] = df.loc[:, ['SCPT_DPTH']]
     for i in range(12):
-        if df.soil_type == 'clay':
-            df_export [f'y_cy{i}'] = df.loc[:, [f'y_cy{i}']]
-            df_export [f'p_cy{i}'] = df.loc[:, [f'p_cy{i}']]
-        else:
-            df_export [f'y{i}'] = df.loc[:, [f'y{i}']]
-            df_export [f'p{i}'] = df.loc[:, [f'p{i}']]
+        df_export[f'y{i}'] = df.apply(lambda row: row[f'y_cy{i}'] if row['soil_type'] == 'clay' else row[f'y{i}'], axis=1)
+        df_export[f'p{i}'] = df.apply(lambda row: row[f'p_cy{i}'] if row['soil_type'] == 'clay' else row[f'p{i}'], axis=1)
+        #if df.loc[df['soil_type'] == 'clay']:
+            #df_export [f'y_cy{i}'] = df.loc[:, [f'y_cy{i}']]
+            #df_export [f'p_cy{i}'] = df.loc[:, [f'p_cy{i}']]
+        #else:
+            #df_export [f'y{i}'] = df.loc[:, [f'y{i}']]
+            #df_export [f'p{i}'] = df.loc[:, [f'p{i}']]
     df_export.to_excel(filename, index=False)
     print(f"{filename} has been exported successfully.")
 
@@ -167,16 +172,27 @@ def plot_p_y_curve(df, plot_interval):
     # get the index of rows with the given interval
     index_list = df.iloc[::plot_interval].index.tolist()
 
+    max_x = float('-inf')
+    max_y = float('-inf')
+
     # Plot the selected rows
     for i in index_list:
         row = df.iloc[i]
-        x = [row[f'y{j}'] for j in range(11)]
-        y = [row[f'p{j}'] for j in range(11)]
+        x = [row[f'y{j}'] for j in range(12)]
+        y = [row[f'p{j}'] for j in range(12)]
         depth = round(row['SCPT_DPTH'], 2)
-        fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=f'Depth: {depth}m'))
+        fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=f'{depth}m'))
+
+        # Update the maximum x and y values if necessary
+        if max(x) > max_x:
+            max_x = max(x)
+        if max(y) > max_y:
+            max_y = max(y)
 
     # Add labels and legend
-    fig.update_layout(xaxis_title='y (mm)', yaxis_title='p (kN/m)', legend=dict(title='Depth'))
+    fig.update_layout(xaxis_title='y (mm)', yaxis_title='p (kN/m)', legend=dict(title='Depth'), plot_bgcolor='white')
+    fig.update_xaxes(range=[0, max_x*1.05], showgrid=True, gridcolor='gainsboro', linecolor='black', tickcolor='black', ticks="outside")
+    fig.update_yaxes(range=[0, max_y*1.05], showgrid=True, gridcolor='gainsboro', linecolor='black', tickcolor='black', ticks="outside")
 
     # Show the plot
     fig.show()

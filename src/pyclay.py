@@ -73,7 +73,7 @@ def calc_N_p0(N_1, N_2, alpha, d, D, N_pd, z):
         N_p0 = N_1 - (1 - alpha)
     return min(N_p0, N_pd)
 
-def calc_N_P(N_pd, N_p0, gamma, z, su, isotropy):
+def calc_N_P(N_pd, N_p0, gamma, z, su):
     '''
     This function calculates the total lateral bearing capacity factor N_P for clay
     '''
@@ -87,10 +87,15 @@ def calc_N_P(N_pd, N_p0, gamma, z, su, isotropy):
 
     if z == 0:
         N_P0 = N_P
+    
+    return N_P
 
-    if isotropy != True:
-        C_W = 1 + (0.9 - 1) * (N_pd - N_P) / (N_pd - N_P0)
-        N_P = min(C_W * N_p0 + ((gamma - 10) * z) / su, N_pd)
+def calc_N_P_anisotropy(N_P, N_P0, N_pd, N_p0, gamma, z, su):
+    '''
+    This function calculates the total lateral bearing capacity factor N_P for clay under anisotropic loading conditions
+    '''
+    C_W = 1 + (0.9 - 1) * (N_pd - N_P) / (N_pd - N_P0)
+    N_P = min(C_W * N_p0 + ((gamma - 10) * z) / su, N_pd)
     
     return N_P
 
@@ -254,17 +259,17 @@ def plot_p_y_cyclic(df, plot_interval):
     for i in index_list:
         row = df.iloc[i]
         if row['soil_type'] == 'clay':
-            x = [row[f'y_cy{j}'] for j in range(11)]
-            y = [row[f'p_cy{j}'] for j in range(11)]           
+            x = [row[f'y_cy{j}'] for j in range(12)]
+            y = [row[f'p_cy{j}'] for j in range(12)]           
             depth = round(row['SCPT_DPTH'], 2)
             fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=f'Depth_cyclic: {depth}m'))
 
-            x_mo = [row[f'y{j}'] for j in range(11)]
-            y_mo = [row[f'p{j}'] for j in range(11)]
+            x_mo = [row[f'y{j}'] for j in range(12)]
+            y_mo = [row[f'p{j}'] for j in range(12)]
             fig.add_trace(go.Scatter(x=x_mo, y=y_mo, mode='lines+markers', name=f'Depth_mono: {depth}m'))
 
     # Add labels and legend
-    fig.update_layout(xaxis_title='y (mm)', yaxis_title='p (kN/m)', legend=dict(title='Depth'))
+    fig.update_layout(xaxis_title='y (mm)', yaxis_title='p (kN/m)', legend=dict(title='Depth'), plot_bgcolor='white')
 
 
     # Show the plot
