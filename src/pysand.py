@@ -20,7 +20,7 @@ def determine_soil_type(ic):
     '''
     if pd.isna(ic):
         return 'N/A'
-    elif ic > 2.6:
+    elif ic > 2.525:
         return 'clay'
     else:
         return 'sand'

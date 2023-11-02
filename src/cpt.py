@@ -843,30 +843,35 @@ class CPT:
         df = self.df
         increment = df.SCPT_DPTH[1] - df.SCPT_DPTH[0]
         df ['qt_avg'] = df.qt.rolling(window = int(3*pile.dia_out/increment), min_periods=1).mean()
-        df ['Qb'] = df.apply(lambda row:self.base_Qb_unified_sand(pile = pile, qp_average = row['qt_avg']) if row.Ic <2.6 else self.base_Qb_unified_clay(pile = pile, qp_average = row['qt_avg']), axis=1)
+        df ['Qb'] = df.apply(lambda row:self.base_Qb_unified_sand(pile = pile, qp_average = row['qt_avg']) if row.Ic_predict <2.6 else self.base_Qb_unified_clay(pile = pile, qp_average = row['qt_avg']), axis=1)
         df ['shaft_F'] = pile.perimeter_outer * df.apply(lambda row: self._shaft_friction_unified_sand(
-            pile, row.SCPT_DPTH, row.SCPT_RES, row.sigma_v_e, compression) if row.Ic <2.6 else self._shaft_friction_unified_clay(pile, row.SCPT_DPTH, row.qt, row.Fr, row.Qt1), axis=1)
-        df ['Qs'] = (df.SCPT_DPTH.shift(-1) - df.SCPT_DPTH).fillna(method='ffill')*df.shaft_F.cumsum()
+            pile, row.SCPT_DPTH, row.SCPT_RES, row.sigma_v_e, compression) if row.Ic_predict <2.6 else self._shaft_friction_unified_clay(pile, row.SCPT_DPTH, row.qt, row.Fr, row.Qt1), axis=1)
+        df ['delta_Qs'] = (df.SCPT_DPTH.shift(-1) - df.SCPT_DPTH).fillna(method = 'ffill')*df.shaft_F
+        df ['Qs'] = df.delta_Qs.cumsum()
         df ['Qc'] = df ['Qs'] + df ['Qb']
 
         if plot_fig:
-            fig = GEOPlot.get_figure(rows=1, cols=4)
+            fig = GEOPlot.get_figure(rows=1, cols=5)
             #fig.add_trace(go.Scatter(x=df.qt,y=df.SCPT_DPTH),row=1,col=1)
             fig.update_yaxes(range=[df.SCPT_DPTH.max(),0], dtick=2)
             fig.update_xaxes(side='top')
-            fig.update_layout(height=800, width=1200)
+            fig.update_layout(height=800, width=1600)
 
             x_labels = ['qt (MPa)', 'Shaft friction (kN)',
-                    'End bearing capacity (kN)', 'Pile axial capaity (kN)']
-            for i in range(4):
+                    'End bearing capacity (kN)', 'Pile axial capaity (kN)', 'Soil layer classification']
+            for i in range(5):
                 fig.update_yaxes(showgrid=True, title='Depth (m)', col=i+1, row=1)
                 fig.update_xaxes(showgrid=True, col=i+1, row=1,
                              side='top', title=x_labels[i])
-            fig.update_xaxes(range=[0, 25], dtick=5, row=1, col=1)
+            #fig.update_xaxes(range=[0, 25], dtick=5, row=1, col=1)
+            fig.update_xaxes(dtick=5, row=1, col=1)
             fig.add_trace(go.Scatter(x=df.qt, y=df.SCPT_DPTH, name='qt(MPa)'), col=1, row=1)
             fig.add_trace(go.Scatter(x=df.Qs, y=df.SCPT_DPTH, name='Qs (kN)'), col=2, row=1)
             fig.add_trace(go.Scatter(x=df.Qb, y=df.SCPT_DPTH, name='Qb (kN)'), col=3, row=1)
             fig.add_trace(go.Scatter(x=df.Qc, y=df.SCPT_DPTH, name='Qc (kN)'), col=4, row=1)
+            fig.add_trace(go.Scatter(x=df.Ic_predict, y=df.SCPT_DPTH, name='Ic_predict', mode='lines', line=dict(width=3, color='brown')), col=5, row=1)
+            fig.add_trace(go.Scatter(x=df.Ic, y=df.SCPT_DPTH, name='Ic_measured', mode='lines', line=dict(width=0.5, color='black')), col=5, row=1)
+            fig.add_shape(type='line', x0=2.525, y0=0, x1=2.525, y1=df.SCPT_DPTH.max(), line=dict(width=3, color='dimgray'), col=5, row=1)
 
             fig.show()
 
@@ -884,7 +889,7 @@ class CPT:
 
         #interpolate cpt data and identify soil type
         df_resampled = interpolate_cpt_data(self.df, interval)
-        df_resampled ['soil_type'] = df_resampled.apply(lambda row:determine_soil_type(ic = row['Ic']), axis = 1)
+        df_resampled ['soil_type'] = df_resampled.apply(lambda row:determine_soil_type(ic = row['Ic_predict']), axis = 1)
 
         #calculate p-y curve parameters for sand
         df_resampled ['phi_e'] = df_resampled.apply(lambda row:calc_phi_e(qt = row['qt'], sigma_v = row['sigma_v'], sigma_v_e = row['sigma_v_e']) if row['soil_type'] == 'sand' else None, axis = 1)
@@ -938,7 +943,7 @@ class CPT:
 
         return df_resampled
     
-    def identify_soil_layers(self, num_layers = 15):
+    def identify_soil_layers(self, num_layers = 15, plot_fig = False):
         X = self.df ['SCPT_DPTH']
         y = self.df ['Ic']
 
@@ -954,63 +959,79 @@ class CPT:
         LinearR = LinearRegression().fit(X_binned, y)
         TreeR = DecisionTreeRegressor(random_state = 0).fit(X_binned, y)
 
-        fig = go.Figure()
+        layer_id = []
+        depth_binned = []
+        Ic_predict = []
+        depth_layered = []
+        Ic_layered = []
+        id_layered = []
+        df_layered = pd.DataFrame()
 
-        ic_value1 = 0.65
-        ic_value2 = 1.875
-        ic_value3 = 2.525
-        ic_value4 = 2.975
-        ic_value5 = 3.475
+        for i, row in enumerate(Line_binned):
+            index = np.argmax(row)
+            layer_id = np.append(layer_id, index)
+            depth_binned = np.append(depth_binned, line_X[i])
+            Ic_predict = np.append(Ic_predict, TreeR.predict(Line_binned)[i])
 
-        fig.add_trace(go.Scatter(x=y.flatten(), y=X[:, 0], mode='lines', line=dict(width=0.5, color='black'), name='CPT data'))
-        #fig.add_trace(go.Scatter(x=LinearR.predict(Line_binned), y=line_X.flatten(), mode='lines', line=dict(width=5, color='green'), name='linear regression'))
-        fig.add_trace(go.Scatter(x=TreeR.predict(Line_binned), y=line_X.flatten(), mode='lines', line=dict(width=5, color='crimson'), name='Fitting with {} soil layers'.format(num_layers)))
+        for id in range(num_layers):
+            id_layered = np.append(id_layered, id)
+            indices = np.where(layer_id == id)[0]
+            last_row = np.max(indices)
+            depth_layered = np.append(depth_layered, depth_binned[last_row])
+            Ic_layered = np.append(Ic_layered, Ic_predict[last_row])
 
-        fig.add_shape(type='line', x0=ic_value1, y0=X.min(), x1=ic_value1, y1=X.max(), line=dict(width=1.5, color='sienna'))
-        fig.add_shape(type='line', x0=ic_value2, y0=X.min(), x1=ic_value2, y1=X.max(), line=dict(width=1.5, color='palevioletred'))
-        fig.add_shape(type='line', x0=ic_value3, y0=X.min(), x1=ic_value3, y1=X.max(), line=dict(width=3, color='dimgray'))
-        fig.add_shape(type='line', x0=ic_value4, y0=X.min(), x1=ic_value4, y1=X.max(), line=dict(width=1.5, color='goldenrod'))
-        fig.add_shape(type='line', x0=ic_value5, y0=X.min(), x1=ic_value5, y1=X.max(), line=dict(width=1.5, color='cornflowerblue'))
+        df_layered['id_layered'] = id_layered
+        df_layered['depth_layered'] = depth_layered
+        df_layered['Ic_layered'] = Ic_layered
 
-        for y in enc.bin_edges_[0]:
-            fig.add_shape(type='line', x0=0, y0=y, x1=y.max(), y1=y, line=dict(width=1, color='silver'))
+        self.df['layer_id'] = self.df['SCPT_DPTH'].apply(
+            lambda x: df_layered.loc[df_layered['depth_layered'] >= x, 'id_layered'].iloc[0] 
+            if any(df_layered['depth_layered'] >= x) 
+            else df_layered['id_layered'].iloc[-1])
+        self.df['Ic_predict'] = self.df['SCPT_DPTH'].apply(
+            lambda x: df_layered.loc[df_layered['depth_layered'] >= x, 'Ic_layered'].iloc[0] 
+            if any(df_layered['depth_layered'] >= x) 
+            else df_layered['Ic_layered'].iloc[-1])
 
-        fig.add_shape(type='rect', x0=0, y0=X.min(), x1=ic_value1, y1=X.max(), fillcolor='sienna', opacity=0.2, layer='below', line=dict(width=0))
-        fig.add_shape(type='rect', x0=ic_value1, y0=X.min(), x1=ic_value2, y1=X.max(), fillcolor='palevioletred', opacity=0.2, layer='below', line=dict(width=0))
-        fig.add_shape(type='rect', x0=ic_value2, y0=X.min(), x1=ic_value3, y1=X.max(), fillcolor='grey', opacity=0.2, layer='below', line=dict(width=0))
-        fig.add_shape(type='rect', x0=ic_value3, y0=X.min(), x1=ic_value4, y1=X.max(), fillcolor='goldenrod', opacity=0.2, layer='below', line=dict(width=0))
-        fig.add_shape(type='rect', x0=ic_value4, y0=X.min(), x1=ic_value5, y1=X.max(), fillcolor='cornflowerblue', opacity=0.2, layer='below', line=dict(width=0))
+        if plot_fig:
+            fig = go.Figure()
 
-        fig.add_annotation(x=(0+ic_value1)/2, y=(X.min()+X.max())/2, text='Gravelly sand to dense sand', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
-        fig.add_annotation(x=(ic_value1+ic_value2)/2, y=(X.min()+X.max())/2, text='Sands - clean sand to silty sand', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
-        fig.add_annotation(x=(ic_value2+ic_value3)/2, y=(X.min()+X.max())/2, text='Sand mixtures - silty sand to sandy silt', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
-        fig.add_annotation(x=(ic_value3+ic_value4)/2, y=(X.min()+X.max())/2, text='Silt mixture - Clayey silt to silty clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
-        fig.add_annotation(x=(ic_value4+ic_value5)/2, y=(X.min()+X.max())/2, text='Clays - silty clay to clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
-        fig.add_annotation(x=(ic_value5+4)/2, y=(X.min()+X.max())/2, text='Organic Soils - clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+            ic_value1 = 0.65
+            ic_value2 = 1.875
+            ic_value3 = 2.525
+            ic_value4 = 2.975
+            ic_value5 = 3.475
 
-        fig.update_xaxes(range=[0, 4], title='Ic', linecolor='black', tickcolor='black', ticks="outside", side='top')
-        fig.update_yaxes(range=[X.max(), 0], title='Depth (m)', linecolor='black', tickcolor='black', ticks="outside")
-        fig.update_layout(height=750, width=500, margin=dict(l=50, r=50, b=50, t=50, pad=4), plot_bgcolor='white', legend=dict(yanchor='top', xanchor='center', x = 0.5, y = -0.02))
-        fig.show()
+            fig.add_trace(go.Scatter(x=y.flatten(), y=X[:, 0], mode='lines', line=dict(width=0.5, color='black'), name='CPT data'))
+            #fig.add_trace(go.Scatter(x=LinearR.predict(Line_binned), y=line_X.flatten(), mode='lines', line=dict(width=5, color='green'), name='linear regression'))
+            fig.add_trace(go.Scatter(x=TreeR.predict(Line_binned), y=line_X.flatten(), mode='lines', line=dict(width=5, color='crimson'), name='Fitting with {} soil layers'.format(num_layers)))
 
-        #df_export = pd.DataFrame()
-        #df_export ['line_X'] = line_X
-        #df_export ['liLine_binnedne_X'] = Line_binned
-        #df_export ['TreeR'] = TreeR.predict(Line_binned)
-        #df_export.to_excel("test", index=False)
+            fig.add_shape(type='line', x0=ic_value1, y0=X.min(), x1=ic_value1, y1=X.max(), line=dict(width=1.5, color='sienna'))
+            fig.add_shape(type='line', x0=ic_value2, y0=X.min(), x1=ic_value2, y1=X.max(), line=dict(width=1.5, color='palevioletred'))
+            fig.add_shape(type='line', x0=ic_value3, y0=X.min(), x1=ic_value3, y1=X.max(), line=dict(width=3, color='dimgray'))
+            fig.add_shape(type='line', x0=ic_value4, y0=X.min(), x1=ic_value4, y1=X.max(), line=dict(width=1.5, color='goldenrod'))
+            fig.add_shape(type='line', x0=ic_value5, y0=X.min(), x1=ic_value5, y1=X.max(), line=dict(width=1.5, color='cornflowerblue'))
 
-        print("line_X shape: ", line_X.shape)
-        print("Line_binned shape: ", Line_binned.shape)
-        print("TreeR shape: ", TreeR.predict(Line_binned).shape)
+            for y in enc.bin_edges_[0]:
+                fig.add_shape(type='line', x0=0, y0=y, x1=y.max(), y1=y, line=dict(width=1, color='silver'))
 
-        plot_x = TreeR.predict(Line_binned)
-        plot_y = line_X.flatten()
+            fig.add_shape(type='rect', x0=0, y0=X.min(), x1=ic_value1, y1=X.max(), fillcolor='sienna', opacity=0.2, layer='below', line=dict(width=0))
+            fig.add_shape(type='rect', x0=ic_value1, y0=X.min(), x1=ic_value2, y1=X.max(), fillcolor='palevioletred', opacity=0.2, layer='below', line=dict(width=0))
+            fig.add_shape(type='rect', x0=ic_value2, y0=X.min(), x1=ic_value3, y1=X.max(), fillcolor='grey', opacity=0.2, layer='below', line=dict(width=0))
+            fig.add_shape(type='rect', x0=ic_value3, y0=X.min(), x1=ic_value4, y1=X.max(), fillcolor='goldenrod', opacity=0.2, layer='below', line=dict(width=0))
+            fig.add_shape(type='rect', x0=ic_value4, y0=X.min(), x1=ic_value5, y1=X.max(), fillcolor='cornflowerblue', opacity=0.2, layer='below', line=dict(width=0))
 
-        #print("Line_binned all", Line_binned)
-        #print("Line_binned value", Line_binned[:, 3])
-        #indices, values = Line_binned[:, 3]
-        #for i in range(len(indices)):
-            #print("Line_binned value", indices[i])
+            fig.add_annotation(x=(0+ic_value1)/2, y=(X.min()+X.max())/2, text='Gravelly sand to dense sand', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+            fig.add_annotation(x=(ic_value1+ic_value2)/2, y=(X.min()+X.max())/2, text='Sands - clean sand to silty sand', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+            fig.add_annotation(x=(ic_value2+ic_value3)/2, y=(X.min()+X.max())/2, text='Sand mixtures - silty sand to sandy silt', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+            fig.add_annotation(x=(ic_value3+ic_value4)/2, y=(X.min()+X.max())/2, text='Silt mixture - Clayey silt to silty clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+            fig.add_annotation(x=(ic_value4+ic_value5)/2, y=(X.min()+X.max())/2, text='Clays - silty clay to clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+            fig.add_annotation(x=(ic_value5+4)/2, y=(X.min()+X.max())/2, text='Organic Soils - clay', showarrow=False, font=dict(size=16, color='black'), textangle=-90, align='center', valign='middle')
+
+            fig.update_xaxes(range=[0, 4], title='Ic', linecolor='black', tickcolor='black', ticks="outside", side='top')
+            fig.update_yaxes(range=[X.max(), 0], title='Depth (m)', linecolor='black', tickcolor='black', ticks="outside")
+            fig.update_layout(height=750, width=500, margin=dict(l=50, r=50, b=50, t=50, pad=4), plot_bgcolor='white', legend=dict(yanchor='top', xanchor='center', x = 0.5, y = -0.02))
+            fig.show()
 
 
     def identify_soil_layers_plotly(self, num_layers = 15):
