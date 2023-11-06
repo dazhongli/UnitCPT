@@ -99,7 +99,7 @@ def calc_pr(D, gamma, z, C1, C2, C3):
     This function calculates the representative lateral capacity (kN/m), for p-y curves for sand
     '''
     #phi_e = self.calc_phi_e()
-    gamma_e = gamma - 10
+    gamma_e = gamma - 9.8
     p_rs = (C1 * z + C2 * D) * gamma_e * z
     p_rd = C3 * D * gamma_e * z
     return min(p_rs, p_rd)

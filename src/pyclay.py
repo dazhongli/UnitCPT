@@ -81,7 +81,7 @@ def calc_N_P(N_pd, N_p0, gamma, z, su):
         N_P = N_pd
     else:
         if su < 15:
-            N_P = min(N_p0 + ((gamma - 10) * z) / su, N_pd)
+            N_P = min(N_p0 + ((gamma - 9.8) * z) / su, N_pd)
         else:
             N_P = min(2 * N_p0, N_pd)
 
@@ -95,7 +95,7 @@ def calc_N_P_anisotropy(N_P, N_P0, N_pd, N_p0, gamma, z, su):
     This function calculates the total lateral bearing capacity factor N_P for clay under anisotropic loading conditions
     '''
     C_W = 1 + (0.9 - 1) * (N_pd - N_P) / (N_pd - N_P0)
-    N_P = min(C_W * N_p0 + ((gamma - 10) * z) / su, N_pd)
+    N_P = min(C_W * N_p0 + ((gamma - 9.8) * z) / su, N_pd)
     
     return N_P
 
@@ -162,7 +162,7 @@ def calc_y_mo(I_p, OCR, D, id_p):
 
     return y_mo[id_p] * 1000
 
-def identify_soil_layers(df):
+def identify_clay_layers(df):
     # Initialize variables
     prev_soil_type = None
     layer_counts = []

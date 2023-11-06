@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from numpy import degrees, log10, pi, radians, tan
+from scipy.interpolate import interp1d
 
 from .geoplot import GEOPlot
 from .ags import AGSParser
@@ -15,7 +16,7 @@ from .utilities import to_numeric_all, plot_showgrid
 import matplotlib.pyplot as plt
 
 from .pysand import calc_phi_e, calc_C1, calc_C2, calc_C3,calc_k, calc_pr, calc_A, interpolate_cpt_data, determine_soil_type, calc_y, calc_p, export_p_y_monotonic, export_p_y_cyclic, plot_p_y_curve
-from .pyclay import calc_su, calc_su1, calc_alpha, calc_N_pd, calc_d, calc_N_p0, calc_N_P, calc_N_P_anisotropy, calc_pu, calc_OCR, identify_soil_layers, calc_y_mo, calc_p_mo, calc_h_f, calc_N_eq, calc_p_y_mod, calc_p_y_mod, plot_p_y_cyclic
+from .pyclay import calc_su, calc_su1, calc_alpha, calc_N_pd, calc_d, calc_N_p0, calc_N_P, calc_N_P_anisotropy, calc_pu, calc_OCR, identify_clay_layers, calc_y_mo, calc_p_mo, calc_h_f, calc_N_eq, calc_p_y_mod, calc_p_y_mod, plot_p_y_cyclic
 
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
@@ -105,6 +106,9 @@ class CPT:
         # Ranges 0.70 ~ 0.85 (page 22 of CPT Guide 2015 Robertson)
         self.net_area_ratio = net_area_ratio
         self.unit_set = False  # Need to set the unit before process
+    
+    def load_data(self, df):
+        self.df = df
 
     def read_ASCII(self, filename, key, pattern):
         '''
@@ -166,10 +170,10 @@ class CPT:
         self.df['Rf'] = self.df.Rf.fillna(method='bfill')
         self.df['gamma'] = self.df.apply(lambda row: self.gamma_total(
             row.Rf, row.qt), axis=1)
-        
-        self.df['sigma_v'] = ((self.df.SCPT_DPTH.shift(-1) -
-                              self.df.SCPT_DPTH).fillna(method='ffill')*self.df.gamma).cumsum()
-        self.df['u0'] = self.df.SCPT_DPTH*10
+        #self.df['sigma_v'] = ((self.df.SCPT_DPTH.shift(-1) -
+                              #self.df.SCPT_DPTH).fillna(method='ffill')*self.df.gamma).cumsum()
+        self.df['sigma_v'] = self.df.SCPT_DPTH*self.df.gamma
+        self.df['u0'] = self.df.SCPT_DPTH*9.8
         self.df['sigma_v_e'] = self.df.sigma_v-self.df.u0
         self._cpt_classification()
         logger.debug(
@@ -217,7 +221,7 @@ class CPT:
         self.df['sigma_v_e'] = self.df.SCPT_DPTH.apply(
             self.soil_stratum.effective_stress)
         self.df['u0'] = self.df.SCPT_DPTH.apply(
-            lambda x: 0 if x <= soil_stratum.water_table else (x-soil_stratum.water_table)*10)
+            lambda x: 0 if x <= soil_stratum.water_table else (x-soil_stratum.water_table)*9.8)
         self.df['sigma_v'] = self.df.sigma_v_e + self.df.u0
 
         # calculate the qt, i.e., the corrected cone resistance
@@ -439,7 +443,7 @@ class CPT:
             fig.update_layout(width=1200, height=800, title=name)
         if water_level is not None:
             hydrostatic = np.where(
-                df.SCPT_DPTH >= water_level, 10*(df.SCPT_DPTH-water_level), 0)
+                df.SCPT_DPTH >= water_level, 9.8*(df.SCPT_DPTH-water_level), 0)
             fig.add_trace(go.Scatter(
                 x=hydrostatic, y=df.SCPT_DPTH, name='Hydrostatic'), 1, 3)
         fig = plot_showgrid(fig, 3)
@@ -780,44 +784,45 @@ class CPT:
             current_columns = {self.df.columns}
             '''
             return print_str
-        
 
-    def _shaft_friction_unified_clay(self, pile, z,  qt, Fr, Qt1):
+
+    def _shaft_friction_unified_clay(self, pile, z,  qt, Fr, sigma_v, sigma_v_e, Ic):
         '''
         This returns unit shaft friction of a pile at clay layer using unified CPT method
         '''
-
-        Iz1 = Qt1 - 12 * np.exp(-1.4 * Fr)
+        n = 0.381 * Ic + 0.05 * (sigma_v_e / PA) - 0.15
+        if n>1:
+            n=1
+        Qtn = (qt*1000 - sigma_v) / PA * (PA / sigma_v_e) ** n
+        Iz1 = Qtn - 12 * np.exp(-1.4 * Fr)
         if Iz1 > 0:
             Fst = 1.0
         else:
             Fst = 0.5
         
-        R_star = np.sqrt((pile.dia_out/2)**2 - (pile.dia_inner/2)**2)
+        D_star = np.sqrt((pile.dia_out)**2 - (pile.dia_inner)**2)
         qt = qt*1000  # qc in MPa
         h = pile.penetration-z
 
-        return 0.007 * Fst * qt * np.max([h/R_star, 1])**(-0.25)
+        return 0.07 * Fst * qt * np.max([h/D_star, 1])**(-0.25)
     
 
     def _shaft_friction_unified_sand(self, pile, z, qc, sigma_v_e, compression=True):
         '''
         This returns unit shaft friction of a pile at sand layer using unified CPT method
         '''
-
-        R_star = np.sqrt((pile.dia_out/2)**2 - (pile.dia_inner/2)**2)
         delta = radians(29)
-        Ar = pile.disp_ratio
+        Ar = 1 - (np.tanh(0.3 * (pile.dia_inner / 0.0356)**0.5)) * (pile.dia_inner / pile.dia_out)**2
         D = pile.dia_out
         h= pile.penetration-z
         depth_ratio = h/D
         qc = qc*1000  # qc in MPa
 
-        sigma_rc = qc / 44 * Ar ** (0.3) * np.max([depth_ratio, 1])** (-0.4)
+        sigma_rc = qc / 44 * Ar ** (0.3) * max(depth_ratio, 1)** (-0.4)
         delta_sigma = qc / 10 * (qc / sigma_v_e) ** (-0.33) * 0.0356 / D
 
         if compression == True:
-            fl = 0.75
+            fl = 1.0
         else:
             fl = 0.75
 
@@ -825,13 +830,14 @@ class CPT:
 
 
     def base_Qb_unified_clay(self, pile, qp_average):
-        Ar = pile.disp_ratio
+        D_star = np.sqrt((pile.dia_out)**2 - (pile.dia_inner)**2)
+        Ar = 1 - (np.tanh(0.3 * (pile.dia_inner / 0.0356)**0.5)) * (pile.dia_inner / pile.dia_out)**2
         qp_average = 1000*qp_average
-        return (0.2 + 0.6 * Ar) * qp_average * pile.gross_area
+        return (0.2 + 0.6 * (D_star / pile.dia_out) ** 2) * qp_average * pile.gross_area
     
 
     def base_Qb_unified_sand(self, pile, qp_average):
-        Ar = pile.disp_ratio
+        Ar = 1 - (np.tanh(0.3 * (pile.dia_inner / 0.0356)**0.5)) * (pile.dia_inner / pile.dia_out)**2
         qp_average = 1000*qp_average
         return (0.12 + 0.38 * Ar) * qp_average * pile.gross_area
     
@@ -842,10 +848,17 @@ class CPT:
         '''
         df = self.df
         increment = df.SCPT_DPTH[1] - df.SCPT_DPTH[0]
-        df ['qt_avg'] = df.qt.rolling(window = int(3*pile.dia_out/increment), min_periods=1).mean()
-        df ['Qb'] = df.apply(lambda row:self.base_Qb_unified_sand(pile = pile, qp_average = row['qt_avg']) if row.Ic_predict <2.6 else self.base_Qb_unified_clay(pile = pile, qp_average = row['qt_avg']), axis=1)
+        #increment = df.SCPT_DPTH.diff().mean()
+        df ['qt_avg_sand'] = df.qt.rolling(window = int(3.0*pile.dia_out/increment), center=True, min_periods=1).mean()
+        reversed_df = pd.DataFrame()
+        reversed_df ['qt'] = df.qt.iloc[::-1]
+        rolling_mean = reversed_df.qt.rolling(window=int(20*pile.t/increment), min_periods=1).mean()
+        df ['qt_avg_clay'] = rolling_mean.iloc[::-1]
+        df ['Qb'] = df.apply(lambda row:self.base_Qb_unified_sand(pile = pile, qp_average = row['qt_avg_sand']) if row.Ic_predict <2.6 else self.base_Qb_unified_clay(pile = pile, qp_average = row['qt_avg_clay']), axis=1)
+        df ['Qb_sand'] = df.apply(lambda row:self.base_Qb_unified_sand(pile = pile, qp_average = row['qt_avg_sand']), axis=1)
+        df ['Qb_clay'] = df.apply(lambda row:self.base_Qb_unified_clay(pile = pile, qp_average = row['qt_avg_clay']), axis=1)
         df ['shaft_F'] = pile.perimeter_outer * df.apply(lambda row: self._shaft_friction_unified_sand(
-            pile, row.SCPT_DPTH, row.SCPT_RES, row.sigma_v_e, compression) if row.Ic_predict <2.6 else self._shaft_friction_unified_clay(pile, row.SCPT_DPTH, row.qt, row.Fr, row.Qt1), axis=1)
+            pile, row.SCPT_DPTH, row.SCPT_RES, row.sigma_v_e, compression) if row.Ic_predict <2.6 else self._shaft_friction_unified_clay(pile, row.SCPT_DPTH, row.qt, row.Fr, row.sigma_v, row.sigma_v_e, row.Ic), axis=1)
         df ['delta_Qs'] = (df.SCPT_DPTH.shift(-1) - df.SCPT_DPTH).fillna(method = 'ffill')*df.shaft_F
         df ['Qs'] = df.delta_Qs.cumsum()
         df ['Qc'] = df ['Qs'] + df ['Qb']
@@ -888,7 +901,9 @@ class CPT:
         I_p = 35
 
         #interpolate cpt data and identify soil type
-        df_resampled = interpolate_cpt_data(self.df, interval)
+        resampled_cpt = self.interpolate_data(interval)
+        #df_resampled = interpolate_cpt_data(self.df, interval)
+        df_resampled = resampled_cpt.df
         df_resampled ['soil_type'] = df_resampled.apply(lambda row:determine_soil_type(ic = row['Ic_predict']), axis = 1)
 
         #calculate p-y curve parameters for sand
@@ -902,7 +917,7 @@ class CPT:
 
         #calculate p-y curve parameters for clay
         df_resampled ['su'] = df_resampled.apply(lambda row:calc_su(qt = row['qt'], sigma_v = row['sigma_v'], nkt = nkt) if row['soil_type'] == 'clay' else None, axis = 1)
-        identify_soil_layers(df_resampled)
+        identify_clay_layers(df_resampled)
         df_resampled ['su1'] = df_resampled.apply(lambda row:calc_su1(su = row['su'], su0 = row['su0'], z= row['SCPT_DPTH']) if row['soil_type'] == 'clay' else None, axis = 1)
         df_resampled ['alpha'] = df_resampled.apply(lambda row:calc_alpha(su = row['su'], sigma_v_e = row['sigma_v_e']) if row['soil_type'] == 'clay' else None, axis = 1)
         df_resampled ['N_pd'] = df_resampled.apply(lambda row:calc_N_pd(alpha = row['alpha']) if row['soil_type'] == 'clay' else None, axis = 1)
@@ -942,7 +957,21 @@ class CPT:
                 plot_p_y_cyclic(df_resampled, 8)
 
         return df_resampled
+
+
+    def interpolate_data(self, interval):
+        new_depths = pd.Series(np.arange(int(self.df['SCPT_DPTH'].min())+interval, int(self.df['SCPT_DPTH'].max()), interval))
+        col_names = self.df.iloc[:, 2:].columns.tolist()
+        df_resampled = pd.DataFrame()
+        df_resampled['SCPT_DPTH'] = new_depths
+        for col_name in col_names:
+            func_name = interp1d(x = self.df['SCPT_DPTH'], y = self.df[col_name], kind = 'linear')
+            df_resampled[col_name] = func_name(new_depths)
+        resampled_cpt = CPT()
+        resampled_cpt.load_data(df_resampled)
+        return resampled_cpt
     
+
     def identify_soil_layers(self, num_layers = 15, plot_fig = False):
         X = self.df ['SCPT_DPTH']
         y = self.df ['Ic']

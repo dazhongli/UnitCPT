@@ -21,11 +21,11 @@ class TestUnifiedCPT(unittest.TestCase):
         k = calc_k(phi_e)
         self.assertAlmostEqual(k, 21877.60, 2)
         pr = calc_pr(D = 2, gamma = 12.20290, z = 0.98, C1 = C1, C2 = C2, C3 = C3)
-        self.assertAlmostEqual(pr, 20.98854, 3)
+        self.assertAlmostEqual(pr, 22.89405, 3)
         A = calc_A(D = 2, z = 0.98, monotonic = True)
         self.assertAlmostEqual(A, 2.608, 3)
         p1 = calc_p(y = 10, A = A, pr = pr, z = 0.98, k =k)
-        self.assertAlmostEqual(p1, 54.69477, 3)
+        self.assertAlmostEqual(p1, 59.61695, 3)
     
     def test_p_y_sand_cyclic(self):
         '''
@@ -43,11 +43,11 @@ class TestUnifiedCPT(unittest.TestCase):
         k = calc_k(phi_e)
         self.assertAlmostEqual(k, 21877.60, 2)
         pr = calc_pr(D = 2, gamma = 12.20290, z = 0.98, C1 = C1, C2 = C2, C3 = C3)
-        self.assertAlmostEqual(pr, 20.98854, 3)
+        self.assertAlmostEqual(pr, 22.89405, 3)
         A = calc_A(D = 2, z = 0.98, monotonic = False)
         self.assertAlmostEqual(A, 0.9, 3)
         p1 = calc_p(y = 10, A = A, pr = pr, z = 0.98, k =k)
-        self.assertAlmostEqual(p1, 18.88969, 3)
+        self.assertAlmostEqual(p1, 20.60464, 3)
 
     def test_p_y_clay_monotonic(self):
         '''
@@ -67,7 +67,7 @@ class TestUnifiedCPT(unittest.TestCase):
         N_p0 = calc_N_p0(N_1 = 12, N_2 = 3.22, alpha = 0.56801, d = 19.04530, D = 2.0, N_pd = 10.70403, z = 2.980)
         self.assertAlmostEqual(N_p0, 5.25509, 3)
         N_P = calc_N_P(N_pd = 10.70403, N_p0 = 5.25509, gamma = 14.11712, z = 3.0, su = 9.57072)
-        self.assertAlmostEqual(N_P, 6.54563, 3)
+        self.assertAlmostEqual(N_P, 6.60832, 3)
         pu = calc_pu(su = 9.57072, D = 2.0, N_P = 6.54563)
         self.assertAlmostEqual(pu, 125.29273, 3)
 
