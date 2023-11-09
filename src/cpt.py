@@ -890,7 +890,7 @@ class CPT:
 
         return df
     
-    def calc_p_y_curve(self, pile, compression = True, monotonic = True, isotropy = True, interval = 1.0, y_range = 600, plot_fig = False, Clay_type = Clay_type.Gulf_of_Mexico):
+    def calc_p_y_curve(self, pile, monotonic = True, isotropy = True, interval = 1.0, y_range = 600, plot_fig = False, Clay_type = Clay_type.Gulf_of_Mexico):
         '''
         This function returns the p-y-cutves along the pile
         '''
@@ -957,7 +957,77 @@ class CPT:
                 plot_p_y_cyclic(df_resampled, 8)
 
         return df_resampled
+    
+    def calc_t_z_curve(self, pile, z = 10, compression = True, plot_fig = False):
+        '''
+        This function returns the axial shear transfer t-z curves
+        '''
+        df = self.df
+        D = pile.dia_out
+        id = (df.SCPT_DPTH - z).abs().idxmin()
+        qc = df.loc[id, 'SCPT_RES']
+        sigma = df.loc[id, 'sigma_v_e']
+        t_max = df.loc[0:id]['shaft_F'].max() / pile.perimeter_outer
 
+        if df.loc[id, 'Ic_predict'] < 2.6:
+            if compression  == True: 
+                A = 1250
+            else: 
+                A = 625
+            z_peak = D * qc**0.5 * sigma**0.25 / (A * PA**0.75)
+        else:
+            z_peak = 0.01 * D
+
+        # Define the values of z/z_peak and t/t_max for the table
+        z_table_normalized = [0.16, 0.31, 0.57, 0.80, 1.0, 2.0, 5.0]
+        t_table_normalized = [0.3, 0.5, 0.75, 0.9, 1.0, 0.7, 0.7]
+
+        z_table = [z * z_peak for z in z_table_normalized]
+        t_table = [t * t_max for t in t_table_normalized]
+        data = list(zip(z_table, t_table))
+        df_tz = pd.DataFrame(data, columns=['z', 't'])
+
+        if plot_fig:
+            fig = go.Figure()
+            x = df_tz.z
+            y = df_tz.t
+            fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=f'PIle tip at {z}m'))
+            fig.update_layout(xaxis_title='Axial pile tip displacement z (m)', yaxis_title='Mobilised soil-pile unit skin friction (kPa)', legend=dict(title='Depth'), plot_bgcolor='white')
+            fig.update_xaxes(showgrid=False, linecolor='black', tickcolor='black', ticks="outside")
+            fig.update_yaxes(showgrid=False, linecolor='black', tickcolor='black', ticks="outside")
+            fig.show()
+
+        return df_tz
+
+    def calc_Q_z_curve(self, pile, z = 10, plot_fig = True):
+        '''
+        This function returns the end bearing resistance-displacement, Q-z, curve
+        '''
+        df = self.df
+        D = pile.dia_out
+        id = (df.SCPT_DPTH - z).abs().idxmin()
+        Q_p = df.loc[id, 'Qb']
+
+        # Define the values of z/z_peak and t/t_max for the table
+        z_table_normalized = [0.0, 0.002, 0.013, 0.042, 0.073, 0.1, 0.2]
+        q_table_normalized = [0.0, 0.25, 0.50, 0.75, 0.90, 1.0, 1.0]
+
+        z_table = [z * D for z in z_table_normalized]
+        q_table = [q * Q_p for q in q_table_normalized]
+        data = list(zip(z_table, q_table))
+        df_qz = pd.DataFrame(data, columns=['z', 'Q'])
+
+        if plot_fig:
+            fig = go.Figure()
+            x = df_qz.z
+            y = df_qz.Q
+            fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=f'PIle tip at {z}m'))
+            fig.update_layout(xaxis_title='Axial pile tip displacement z (m)', yaxis_title='Mobilised end bearing resistance (kN)', legend=dict(title='Depth'), plot_bgcolor='white')
+            fig.update_xaxes(showgrid=False, linecolor='black', tickcolor='black', ticks="outside")
+            fig.update_yaxes(showgrid=False, linecolor='black', tickcolor='black', ticks="outside")
+            fig.show()
+        
+        return df_qz
 
     def interpolate_data(self, interval):
         new_depths = pd.Series(np.arange(int(self.df['SCPT_DPTH'].min())+interval, int(self.df['SCPT_DPTH'].max()), interval))
